@@ -74,36 +74,7 @@ export default function App() {
         <StatusCard icon="🔌" label="API Port"  value=":5000" />
       </div>
 
-      {/* API Tester */}
-      <div className="panel">
-        <div className="panel-title">🧪 Live API Tester</div>
-        <div className="endpoint-list">
-          {ENDPOINTS.map(ep => (
-            <div key={ep.url}>
-              <div className="endpoint-row">
-                <span className="method-badge">GET</span>
-                <span className="endpoint-url">
-                  http://localhost:5000{ep.url}
-                  <span style={{ color: '#475569', marginLeft: 8 }}>— {ep.desc}</span>
-                </span>
-                <button
-                  className="test-btn"
-                  onClick={() => testEndpoint(ep.url)}
-                  disabled={loading[ep.url]}
-                >
-                  {loading[ep.url] ? <><span className="spinner" />Testing…</> : '▶ Test'}
-                </button>
-              </div>
-              {responses[ep.url] !== undefined && (
-                <div className="response-box">
-                  {responses[ep.url] || 'Loading…'}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
+      
       {/* Info Panel */}
       <div className="panel">
         <div className="panel-title">📋 Stack Info</div>
