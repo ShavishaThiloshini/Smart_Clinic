@@ -5,6 +5,7 @@ interface Props { onSubmit: (data: RegisterFormState) => void; isLoading?: boole
 
 export function RegisterForm({ onSubmit, isLoading = false, error }: Props) {
   const [form, setForm] = useState<RegisterFormState>({ name: '', email: '', role: 'patient', password: '', confirmPassword: '', agreeToTerms: false });
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -19,8 +20,8 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: Props) {
     <label>Full name<input autoComplete="name" placeholder="Your full name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label>
     <label>Email address<input type="email" autoComplete="email" placeholder="you@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></label>
     <label>I am registering as<select value={form.role} onChange={e => setForm({ ...form, role: e.target.value as RegisterFormState['role'] })}><option value="patient">Patient</option><option value="doctor">Doctor</option></select></label>
-    <label>Password<input type="password" autoComplete="new-password" placeholder="At least 8 characters" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></label>
-    <label>Confirm password<input type="password" autoComplete="new-password" placeholder="Repeat your password" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} /></label>
+    <label>Password<div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="At least 8 characters" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /><button type="button" className="eye-button" aria-label={showPassword ? 'Hide password' : 'Show password'} title={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.8"/>{showPassword && <path d="m4 4 16 16"/>}</svg></button></div></label>
+    <label>Confirm password<div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" placeholder="Repeat your password" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} /><button type="button" className="eye-button" aria-label={showPassword ? 'Hide password' : 'Show password'} title={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.8"/>{showPassword && <path d="m4 4 16 16"/>}</svg></button></div></label>
     <label className="check terms"><input type="checkbox" checked={form.agreeToTerms} onChange={e => setForm({ ...form, agreeToTerms: e.target.checked })} />I agree to the privacy policy and terms.</label>
     <button className="primary-button" disabled={isLoading}>{isLoading ? 'Creating account…' : 'Create account'}</button>
     <p className="switch-copy">Already have an account? <a href="/login">Sign in</a></p>
