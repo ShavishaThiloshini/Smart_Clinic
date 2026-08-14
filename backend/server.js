@@ -8,14 +8,15 @@ const PORT = process.env.PORT || 5000;
 async function startServer() {
   try {
     await testConnection();
-    console.log('PostgreSQL connection successful.');
+    console.log('✅ MySQL connection successful.');
   } catch (error) {
-    console.warn('PostgreSQL is not available yet. Starting the Express server without database connection.');
-    console.warn('To enable DB features, start PostgreSQL and configure DATABASE_URL in the .env file.');
+    console.warn('⚠️  MySQL is not available yet. Starting Express without DB.');
+    console.warn('   → Start MySQL and configure .env (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)');
   }
 
   app.listen(PORT, () => {
-    console.log(`Smart Clinic backend running on http://localhost:${PORT}`);
+    console.log(`🚀 Smart Clinic backend running on http://localhost:${PORT}`);
+    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
 
