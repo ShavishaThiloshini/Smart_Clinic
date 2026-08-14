@@ -53,7 +53,7 @@ Both developers should:
 ### Rakavi
 
 - Express.js setup
-- PostgreSQL setup
+- MySQL setup
 
 ### Goal
 
@@ -629,7 +629,7 @@ By Day 30, the project should contain:
 
 Working React frontend
 Express.js backend
-PostgreSQL database
+MySQL database
 Authentication
 Role-based authorization
 Patient module

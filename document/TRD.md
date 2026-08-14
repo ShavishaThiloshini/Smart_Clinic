@@ -9,7 +9,7 @@
 | Document | Technical Requirement Document |
 | Frontend | React.js |
 | Backend | Node.js + Express.js |
-| Database | PostgreSQL |
+| Database | MySQL |
 | Authentication | JWT or Secure Session |
 | API Testing | Postman |
 | Version Control | Git + GitHub |
@@ -67,7 +67,7 @@ The system aims to:
 
 ### 4.3 Database
 
-- PostgreSQL
+- MySQL
 - Relational database design
 
 ### 4.4 Authentication
@@ -89,7 +89,7 @@ Role-based authorization must be implemented.
 ### 4.6 Deployment
 
 The application should be deployed using a suitable cloud platform
-for frontend, backend, and PostgreSQL hosting.
+for frontend, backend, and MySQL hosting.
 
 ---
 
@@ -450,7 +450,7 @@ Suggested API modules:
 
 ## 10. Database Requirements
 
-The PostgreSQL database will contain the following major entities:
+The MySQL database will contain the following major entities:
 
 - Users
 - Patients
@@ -526,7 +526,7 @@ The completed system should provide:
 
 - Working frontend
 - Working backend
-- PostgreSQL database
+- MySQL database
 - Authentication
 - Role-based authorization
 - Patient functionality

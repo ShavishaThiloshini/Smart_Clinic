@@ -5,7 +5,7 @@
 
 Database:
 
-PostgreSQL
+MySQL
 
 The database will use a relational structure to manage:
 

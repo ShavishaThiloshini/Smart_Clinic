@@ -6,7 +6,7 @@
 | **Document Type** | Product Requirements Document (PRD) |
 | **Source** | Derived from Smart Clinic & Doctor Appointment System – SRS v1.0 |
 | **Product** | Smart Clinic & Doctor Appointment System (web-based) |
-| **Technology Stack** | React.js (frontend) · Express.js / Node.js (backend) · PostgreSQL (database) |
+| **Technology Stack** | React.js (frontend) · Express.js / Node.js (backend) · MySQL (database) |
 | **Version** | 1.0 |
 | **Status** | Draft |
 | **Date** | August 13, 2026 |
@@ -184,12 +184,12 @@ Functional requirements are grouped into feature areas (epics). Each requirement
 |---|---|
 | **Frontend** | React.js, JavaScript/TypeScript, HTML5, CSS3, Tailwind CSS or equivalent UI framework |
 | **Backend** | Node.js runtime with Express.js REST API |
-| **Database** | PostgreSQL relational database |
+| **Database** | MySQL relational database |
 | **Authentication** | JWT or secure session-based authentication with role-based authorization |
 | **API Testing** | Postman or equivalent API testing tool |
 | **Version Control** | Git and GitHub |
 | **Development Environment** | Visual Studio Code or equivalent IDE |
-| **Deployment** | A suitable cloud platform for frontend, backend, and PostgreSQL hosting |
+| **Deployment** | A suitable cloud platform for frontend, backend, and MySQL hosting |
 
 ### 7.1 Suggested Database Entities
 Users, Patients, Doctors, Specializations, Clinics, Doctor_Availability, Appointments, Medical_Records, Prescriptions, Prescription_Items, Notifications, Reviews, Audit_Logs.
@@ -240,4 +240,4 @@ Users, Patients, Doctors, Specializations, Clinics, Doctor_Availability, Appoint
 ---
 
 ## 11. Summary
-The Smart Clinic & Doctor Appointment System will provide a centralized platform for managing patients, doctors, appointments, schedules, medical records, and clinic administration. The React.js frontend, Express.js backend, and PostgreSQL database provide a practical, scalable, and well-structured technology foundation for delivering the scope defined in this PRD.
+The Smart Clinic & Doctor Appointment System will provide a centralized platform for managing patients, doctors, appointments, schedules, medical records, and clinic administration. The React.js frontend, Express.js backend, and MySQL database provide a practical, scalable, and well-structured technology foundation for delivering the scope defined in this PRD.
