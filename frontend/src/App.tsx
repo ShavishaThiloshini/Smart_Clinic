@@ -1,26 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import logo from './assets/images/logo.png';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
 
-const ENDPOINTS = [
-  { label: 'Root',   url: '/',           desc: 'Server info' },
-  { label: 'Health', url: '/api/health', desc: 'Health check' },
-]
-
-function StatusCard({ icon, label, value, badge }: {
-  icon: string; label: string; value: string; badge?: { text: string; cls: string }
-}) {
-  return (
-    <div className="card">
-      <div className="card-icon">{icon}</div>
-      <div className="card-label">{label}</div>
-      {badge
-        ? <span className={`badge badge-${badge.cls}`}><span className="pulse-dot" /> {badge.text}</span>
-        : <div className="card-value">{value}</div>
-      }
-    </div>
-  )
+function LoadingScreen() {
+  return <main className="loading-scene" aria-label="Loading Smart Clinic">
+    <div className="loading-orb orb-one" /><div className="loading-orb orb-two" />
+    <section className="loading-card">
+      <img className="loading-logo" src={logo} alt="Smart Clinic" />
+      <p>Preparing your care experience</p>
+      <div className="loading-track"><span /></div>
+    </section>
+  </main>;
 }
 
 export default function App() {
+<<<<<<< HEAD
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking')
   const [responses, setResponses] = useState<Record<string, string>>({})
   const [loading, setLoading]   = useState<Record<string, boolean>>({})
@@ -99,4 +95,10 @@ export default function App() {
       </div>
     </div>
   )
+=======
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => { const timer = window.setTimeout(() => setIsLoading(false), 2300); return () => window.clearTimeout(timer); }, []);
+  if (isLoading) return <LoadingScreen />;
+  return <BrowserRouter><Routes><Route path="/" element={<Navigate to="/login" replace />} /><Route path="/login" element={<LoginPage />} /><Route path="/register" element={<RegisterPage />} /><Route path="*" element={<Navigate to="/login" replace />} /></Routes></BrowserRouter>;
+>>>>>>> 1a829553b455a29fb2dce30c6f39490d7ab10240
 }
