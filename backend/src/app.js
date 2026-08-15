@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { createHealthRouter } = require('./routes/health');
+const { createAuthRouter }  = require('./routes/auth');
+const { createAdminRouter } = require('./routes/admin');
 
 const app = express();
 
@@ -16,7 +18,9 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use('/api', createHealthRouter());
+app.use('/api',       createHealthRouter());
+app.use('/api/auth',  createAuthRouter());
+app.use('/api/admin', createAdminRouter());
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
