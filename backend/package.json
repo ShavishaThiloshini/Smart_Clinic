@@ -1,16 +1,17 @@
 {
   "name": "smart-clinic-backend",
   "version": "1.0.0",
-  "description": "Smart Clinic Express.js backend with PostgreSQL",
+  "description": "Smart Clinic Express.js backend with MySQL",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:init": "node src/config/init-db.js"
   },
   "keywords": [
     "clinic",
     "express",
-    "postgresql"
+    "mysql"
   ],
   "author": "",
   "license": "MIT",
@@ -18,7 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^5.2.1",
-    "pg": "^8.23.0"
+    "mysql2": "^3.14.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

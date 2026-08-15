@@ -7,7 +7,7 @@ function createHealthRouter() {
     res.json({
       status: 'ok',
       service: 'smart-clinic-backend',
-      database: 'postgresql'
+      database: 'mysql'
     });
   });
 

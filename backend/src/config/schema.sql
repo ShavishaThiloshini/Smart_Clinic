@@ -1,145 +1,116 @@
 CREATE TABLE IF NOT EXISTS users (
-  user_id SERIAL PRIMARY KEY,
+  user_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(50) NOT NULL,
+  role ENUM('patient', 'doctor', 'admin') NOT NULL,
   status VARCHAR(50) NOT NULL DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS patients (
-  patient_id SERIAL PRIMARY KEY,
-  user_id INTEGER UNIQUE NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  phone VARCHAR(50),
-  date_of_birth DATE,
-  gender VARCHAR(50),
-  address TEXT,
-  medical_info TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS specializations (
-  specialization_id SERIAL PRIMARY KEY,
-  name VARCHAR(255) UNIQUE NOT NULL,
+  specialization_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE,
   description TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS clinics (
-  clinic_id SERIAL PRIMARY KEY,
+  clinic_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   address TEXT,
   phone VARCHAR(50),
   operating_hours TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS patients (
+  patient_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL UNIQUE,
+  phone VARCHAR(50), date_of_birth DATE, gender VARCHAR(50), address TEXT, medical_info TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_patients_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS doctors (
-  doctor_id SERIAL PRIMARY KEY,
-  user_id INTEGER UNIQUE NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  specialization_id INTEGER REFERENCES specializations(specialization_id),
-  clinic_id INTEGER REFERENCES clinics(clinic_id),
-  qualifications TEXT,
-  experience INTEGER,
-  consultation_fee DECIMAL(10,2),
-  bio TEXT,
-  approval_status VARCHAR(50) DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  doctor_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL UNIQUE,
+  specialization_id INT UNSIGNED NULL, clinic_id INT UNSIGNED NULL,
+  qualifications TEXT, experience INT, consultation_fee DECIMAL(10,2), bio TEXT,
+  approval_status VARCHAR(50) NOT NULL DEFAULT 'pending', created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_doctors_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  CONSTRAINT fk_doctors_specialization FOREIGN KEY (specialization_id) REFERENCES specializations(specialization_id),
+  CONSTRAINT fk_doctors_clinic FOREIGN KEY (clinic_id) REFERENCES clinics(clinic_id),
+  INDEX idx_doctors_specialization (specialization_id), INDEX idx_doctors_clinic (clinic_id)
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS doctor_availability (
-  availability_id SERIAL PRIMARY KEY,
-  doctor_id INTEGER NOT NULL REFERENCES doctors(doctor_id) ON DELETE CASCADE,
-  day_of_week VARCHAR(20) NOT NULL,
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  slot_duration INTEGER,
-  status BOOLEAN DEFAULT TRUE
-);
+  availability_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  doctor_id INT UNSIGNED NOT NULL, day_of_week VARCHAR(20) NOT NULL, start_time TIME NOT NULL, end_time TIME NOT NULL,
+  slot_duration INT UNSIGNED NOT NULL DEFAULT 30, status BOOLEAN NOT NULL DEFAULT TRUE,
+  CONSTRAINT fk_availability_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS appointments (
-  appointment_id SERIAL PRIMARY KEY,
-  patient_id INTEGER NOT NULL REFERENCES patients(patient_id) ON DELETE CASCADE,
-  doctor_id INTEGER NOT NULL REFERENCES doctors(doctor_id) ON DELETE CASCADE,
-  clinic_id INTEGER REFERENCES clinics(clinic_id),
-  appointment_date DATE NOT NULL,
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  queue_number INTEGER,
-  status VARCHAR(50) NOT NULL DEFAULT 'pending',
-  reason TEXT,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+  appointment_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT UNSIGNED NOT NULL, doctor_id INT UNSIGNED NOT NULL, clinic_id INT UNSIGNED NULL,
+  appointment_date DATE NOT NULL, start_time TIME NOT NULL, end_time TIME NOT NULL, queue_number INT UNSIGNED,
+  status ENUM('pending','confirmed','completed','cancelled','no-show') NOT NULL DEFAULT 'pending', reason TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_appointments_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
+  CONSTRAINT fk_appointments_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE,
+  CONSTRAINT fk_appointments_clinic FOREIGN KEY (clinic_id) REFERENCES clinics(clinic_id),
+  CONSTRAINT uq_appointment_slot UNIQUE (doctor_id, appointment_date, start_time),
+  INDEX idx_appointments_patient (patient_id), INDEX idx_appointments_date (appointment_date)
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS medical_records (
-  record_id SERIAL PRIMARY KEY,
-  patient_id INTEGER NOT NULL REFERENCES patients(patient_id) ON DELETE CASCADE,
-  doctor_id INTEGER NOT NULL REFERENCES doctors(doctor_id) ON DELETE CASCADE,
-  appointment_id INTEGER REFERENCES appointments(appointment_id),
-  diagnosis TEXT,
-  notes TEXT,
-  treatment TEXT,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+  record_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT UNSIGNED NOT NULL, doctor_id INT UNSIGNED NOT NULL, appointment_id INT UNSIGNED NULL,
+  diagnosis TEXT, notes TEXT, treatment TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_records_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
+  CONSTRAINT fk_records_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE,
+  CONSTRAINT fk_records_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id)
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS prescriptions (
-  prescription_id SERIAL PRIMARY KEY,
-  patient_id INTEGER NOT NULL REFERENCES patients(patient_id) ON DELETE CASCADE,
-  doctor_id INTEGER NOT NULL REFERENCES doctors(doctor_id) ON DELETE CASCADE,
-  appointment_id INTEGER REFERENCES appointments(appointment_id),
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  prescription_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT UNSIGNED NOT NULL, doctor_id INT UNSIGNED NOT NULL, appointment_id INT UNSIGNED NULL, notes TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_prescriptions_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
+  CONSTRAINT fk_prescriptions_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE,
+  CONSTRAINT fk_prescriptions_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id)
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS prescription_items (
-  item_id SERIAL PRIMARY KEY,
-  prescription_id INTEGER NOT NULL REFERENCES prescriptions(prescription_id) ON DELETE CASCADE,
-  medicine_name VARCHAR(255) NOT NULL,
-  dosage VARCHAR(100),
-  frequency VARCHAR(100),
-  duration VARCHAR(100)
-);
+  item_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, prescription_id INT UNSIGNED NOT NULL,
+  medicine_name VARCHAR(255) NOT NULL, dosage VARCHAR(100), frequency VARCHAR(100), duration VARCHAR(100),
+  CONSTRAINT fk_items_prescription FOREIGN KEY (prescription_id) REFERENCES prescriptions(prescription_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS notifications (
-  notification_id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  appointment_id INTEGER REFERENCES appointments(appointment_id),
-  title VARCHAR(255),
-  message TEXT,
-  type VARCHAR(50),
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  notification_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id INT UNSIGNED NOT NULL, appointment_id INT UNSIGNED NULL,
+  title VARCHAR(255), message TEXT, type VARCHAR(50), is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  CONSTRAINT fk_notifications_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
+  INDEX idx_notifications_user (user_id)
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS reviews (
-  review_id SERIAL PRIMARY KEY,
-  patient_id INTEGER NOT NULL REFERENCES patients(patient_id) ON DELETE CASCADE,
-  doctor_id INTEGER NOT NULL REFERENCES doctors(doctor_id) ON DELETE CASCADE,
-  appointment_id INTEGER REFERENCES appointments(appointment_id),
-  rating INTEGER,
-  comment TEXT,
-  status VARCHAR(50) DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT NOW()
-);
+  review_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, patient_id INT UNSIGNED NOT NULL, doctor_id INT UNSIGNED NOT NULL,
+  appointment_id INT UNSIGNED NULL, rating TINYINT UNSIGNED NOT NULL, comment TEXT, status VARCHAR(50) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_review_rating CHECK (rating BETWEEN 1 AND 5),
+  CONSTRAINT fk_reviews_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
+  CONSTRAINT fk_reviews_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE,
+  CONSTRAINT fk_reviews_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id)
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS audit_logs (
-  audit_id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(user_id),
-  action VARCHAR(255),
-  entity_type VARCHAR(255),
-  entity_id VARCHAR(255),
-  description TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_doctors_specialization ON doctors(specialization_id);
-CREATE INDEX IF NOT EXISTS idx_doctors_clinic ON doctors(clinic_id);
-CREATE INDEX IF NOT EXISTS idx_appointments_doctor ON appointments(doctor_id);
-CREATE INDEX IF NOT EXISTS idx_appointments_patient ON appointments(patient_id);
-CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date);
-CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+  audit_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id INT UNSIGNED NULL, action VARCHAR(255), entity_type VARCHAR(255),
+  entity_id VARCHAR(255), description TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+) ENGINE=InnoDB;
