@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import logo from './assets/images/logo.png';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { PatientDashboard } from './pages/patient/PatientDashboard';
 
 function LoadingScreen() {
   return <main className="loading-scene" aria-label="Loading Smart Clinic">
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
