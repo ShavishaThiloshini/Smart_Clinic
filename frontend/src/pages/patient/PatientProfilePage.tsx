@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import {
+  ProfileHeader,
+  HealthSummaryCard,
+  InformationSection,
+  EmergencyContact,
+  ProfileCompletion,
+  LoadingSkeleton
+} from '../../components/patient/profile';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -13,17 +21,12 @@ const navigation = [
 
 export function PatientProfilePage() {
   const navigate = useNavigate();
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    dateOfBirth: '',
-    gender: '',
-    address: '',
-    medicalInfo: ''
-  });
-  
+
+  const [profile, setProfile] = useState<any>({});
+  const [formData, setFormData] = useState<any>({});
+
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -44,24 +47,21 @@ export function PatientProfilePage() {
     try {
       const token = localStorage.getItem('sc_token');
       const res = await fetch('/api/patient/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       const json = await res.json();
       if (res.ok && json.success) {
-        setFormData({
-          name: json.profile.name || '',
-          phone: json.profile.phone || '',
-          dateOfBirth: json.profile.dateOfBirth ? json.profile.dateOfBirth.split('T')[0] : '',
-          gender: json.profile.gender || '',
-          address: json.profile.address || '',
-          medicalInfo: json.profile.medicalInfo || ''
-        });
+        const p = json.profile;
+        if (p.dateOfBirth) p.dateOfBirth = p.dateOfBirth.split('T')[0];
+        if (p.memberSince) p.memberSince = p.memberSince.split('T')[0].split('-')[0];
+
+        setProfile(p);
+        setFormData(p);
       }
     } catch (err) {
       console.error('Failed to load profile', err);
+      setMessage({ type: 'error', text: 'Unable to load profile data right now.' });
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +71,7 @@ export function PatientProfilePage() {
     e.preventDefault();
     setIsSaving(true);
     setMessage({ type: '', text: '' });
-    
+
     try {
       const token = localStorage.getItem('sc_token');
       const res = await fetch('/api/patient/profile', {
@@ -82,18 +82,22 @@ export function PatientProfilePage() {
         },
         body: JSON.stringify(formData)
       });
-      
+
       const json = await res.json();
-      
+
       if (res.ok) {
-        setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        
-        // Update local storage name if it changed
+        setMessage({ type: 'success', text: 'Profile updated successfully.' });
+        setProfile(formData);
+        setIsEditing(false);
+
         const savedUser = JSON.parse(localStorage.getItem('sc_user') || '{}');
         savedUser.name = formData.name;
         localStorage.setItem('sc_user', JSON.stringify(savedUser));
+
+        // Hide success message after 3 seconds
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
-        setMessage({ type: 'error', text: json.message || 'Failed to update profile.' });
+        setMessage({ type: 'error', text: json.message || 'Unable to update your profile right now. Please try again.' });
       }
     } catch (err) {
       setMessage({ type: 'error', text: 'Network error. Please try again later.' });
@@ -108,14 +112,29 @@ export function PatientProfilePage() {
     navigate('/login', { replace: true });
   }
 
+  const personalInfoData = [
+    { label: 'Full Name', value: profile.name },
+    { label: 'Email', value: profile.email },
+    { label: 'Phone Number', value: profile.phone },
+    { label: 'Date of Birth', value: profile.dateOfBirth },
+    { label: 'Gender', value: profile.gender },
+    { label: 'Address', value: profile.address }
+  ];
+
+  const accountInfoData = [
+    { label: 'Patient ID', value: profile.patientId || 'PT-PENDING' },
+    { label: 'Account Status', value: profile.accountStatus || 'Active' },
+    { label: 'Member Since', value: profile.memberSince || '-' },
+  ];
+
   return (
     <main className="patient-shell">
       <aside className="patient-sidebar">
         <img className="patient-logo" src={logo} alt="Smart Clinic" />
         <nav aria-label="Patient navigation">
-          {navigation.map((nav) => (
+          {navigation.map((nav, idx) => (
             <button 
-              className="patient-nav-link" 
+              className={`patient-nav-link ${idx === 0 ? 'active' : ''}`}
               key={nav.label} 
               type="button"
               onClick={() => nav.path !== '#' && navigate(nav.path)}
@@ -132,104 +151,131 @@ export function PatientProfilePage() {
           <button className="mobile-menu" type="button" aria-label="Open navigation">☰</button>
           <div className="patient-header-spacer" />
           <button className="notification-button" type="button" aria-label="Notifications">♧<span /></button>
-          <div className="patient-avatar" aria-hidden="true">{patientInitials}</div>
+          <div className="patient-avatar" aria-hidden="true" title="View Profile" style={{ cursor: 'pointer' }}>
+            {patientInitials}
+          </div>
         </header>
 
-        <div className="patient-page">
-          <section className="patient-welcome">
-            <div>
-              <p className="patient-eyebrow">PATIENT PROFILE</p>
-              <h1>Personal Information</h1>
-              <p>View and update your personal and medical details.</p>
+        <div className="patient-page profile-redesign">
+          {message.text && (
+            <div className={`toast-notification ${message.type}`}>
+              {message.text}
             </div>
-          </section>
-
-          <article className="profile-card dashboard-form-container">
-            {isLoading ? (
-              <p style={{ color: '#71809a' }}>Loading profile information...</p>
-            ) : (
-              <form className="dashboard-form" onSubmit={handleSubmit}>
-                {message.text && (
-                  <div className={message.type === 'success' ? 'success-message' : 'form-error'}>
-                    {message.text}
+          )}
+          
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : isEditing ? (
+             <article className="profile-card dashboard-form-container edit-mode-card">
+               <h2 className="section-title" style={{marginBottom: '24px'}}>Edit Profile</h2>
+               <form className="dashboard-form" onSubmit={handleSubmit}>
+                 <div className="dashboard-form-row">
+                   <label>Full Name
+                     <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                   </label>
+                   <label>Email
+                     <input type="email" value={formData.email || ''} disabled style={{opacity: 0.7, cursor: 'not-allowed'}} />
+                   </label>
+                 </div>
+                 <div className="dashboard-form-row">
+                   <label>Phone Number
+                     <input type="tel" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                   </label>
+                   <label>Date of Birth
+                     <input type="date" value={formData.dateOfBirth || ''} onChange={e => setFormData({...formData, dateOfBirth: e.target.value})} />
+                   </label>
+                 </div>
+                 <div className="dashboard-form-row">
+                   <label>Gender
+                     <select value={formData.gender || ''} onChange={e => setFormData({...formData, gender: e.target.value})}>
+                       <option value="">Select</option>
+                       <option value="male">Male</option>
+                       <option value="female">Female</option>
+                       <option value="other">Other</option>
+                     </select>
+                   </label>
+                   <label>Blood Group
+                     <select value={formData.bloodGroup || ''} onChange={e => setFormData({...formData, bloodGroup: e.target.value})}>
+                       <option value="">Select</option>
+                       <option value="A+">A+</option>
+                       <option value="A-">A-</option>
+                       <option value="B+">B+</option>
+                       <option value="B-">B-</option>
+                       <option value="O+">O+</option>
+                       <option value="O-">O-</option>
+                       <option value="AB+">AB+</option>
+                       <option value="AB-">AB-</option>
+                     </select>
+                   </label>
+                 </div>
+                 <label>Address
+                   <textarea value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} rows={2} />
+                 </label>
+                 <label>Medical Information
+                   <textarea value={formData.medicalInfo || ''} onChange={e => setFormData({...formData, medicalInfo: e.target.value})} rows={3} />
+                 </label>
+                 
+                 <h3 className="section-title" style={{marginTop: '16px', marginBottom: '8px', fontSize: '1.1rem'}}>Emergency Contact</h3>
+                 <div className="dashboard-form-row">
+                   <label>Contact Name
+                     <input type="text" value={formData.emergencyContactName || ''} onChange={e => setFormData({...formData, emergencyContactName: e.target.value})} />
+                   </label>
+                   <label>Relationship
+                     <input type="text" value={formData.emergencyContactRelation || ''} onChange={e => setFormData({...formData, emergencyContactRelation: e.target.value})} />
+                   </label>
+                   <label>Phone Number
+                     <input type="tel" value={formData.emergencyContactPhone || ''} onChange={e => setFormData({...formData, emergencyContactPhone: e.target.value})} />
+                   </label>
+                 </div>
+                 
+                 <div className="dashboard-form-actions">
+                   <button type="button" className="secondary-action" onClick={() => setIsEditing(false)}>Cancel</button>
+                   <button type="submit" className="primary-action" disabled={isSaving}>
+                     {isSaving ? 'Saving...' : 'Save Changes'}
+                   </button>
+                 </div>
+               </form>
+             </article>
+          ) : (
+            <div className="profile-view-layout">
+              <ProfileHeader profile={profile} onEdit={() => setIsEditing(true)} />
+              <ProfileCompletion profile={profile} />
+              
+              <HealthSummaryCard 
+                age={profile.dateOfBirth ? (new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()) : null}
+                bloodGroup={profile.bloodGroup}
+                gender={profile.gender}
+                memberSince={profile.memberSince}
+              />
+              
+              <div className="profile-grid">
+                <InformationSection title="Personal Information" data={personalInfoData} />
+                <div className="profile-grid-column">
+                  <EmergencyContact contact={{
+                    name: profile.emergencyContactName,
+                    relation: profile.emergencyContactRelation,
+                    phone: profile.emergencyContactPhone
+                  }} />
+                  <InformationSection title="Account Information" data={accountInfoData} />
+                  
+                  <div className="profile-section-card">
+                    <h3 className="section-title">Account & Security</h3>
+                    <div className="info-grid single-col">
+                      <div className="info-item">
+                        <span className="info-label">Password</span>
+                        <div className="password-row" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                          <span className="info-value">••••••••••••</span>
+                          <button className="secondary-action small">Change</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
-                
-                <label>
-                  Full Name
-                  <input 
-                    type="text" 
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                </label>
-                
-                <div className="dashboard-form-row">
-                  <label>
-                    Phone Number
-                    <input 
-                      type="tel" 
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      placeholder="+1 (555) 000-0000"
-                    />
-                  </label>
-                  
-                  <label>
-                    Date of Birth
-                    <input 
-                      type="date" 
-                      value={formData.dateOfBirth}
-                      onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
-                    />
-                  </label>
-                  
-                  <label>
-                    Gender
-                    <select 
-                      value={formData.gender}
-                      onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </label>
                 </div>
-                
-                <label>
-                  Residential Address
-                  <textarea 
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    placeholder="Enter your full residential address"
-                    rows={2}
-                  />
-                </label>
-                
-                <label>
-                  Medical Information & History
-                  <textarea 
-                    value={formData.medicalInfo}
-                    onChange={(e) => setFormData({...formData, medicalInfo: e.target.value})}
-                    placeholder="Allergies, ongoing medications, past surgeries, or chronic conditions..."
-                    rows={4}
-                  />
-                </label>
-                
-                <div className="dashboard-form-actions">
-                  <button type="button" className="secondary-action" onClick={() => navigate('/patient/dashboard')}>Cancel</button>
-                  <button type="submit" className="primary-action" disabled={isSaving}>
-                    {isSaving ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </article>
+              </div>
+            </div>
+          )}
         </div>
-      </section>
-    </main>
+      </section >
+    </main >
   );
 }

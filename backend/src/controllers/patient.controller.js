@@ -9,11 +9,17 @@ async function getProfile(req, res, next) {
       `SELECT
          u.name,
          u.email,
+         u.status AS accountStatus,
+         u.created_at AS memberSince,
          p.phone,
          p.date_of_birth AS dateOfBirth,
          p.gender,
          p.address,
-         p.medical_info AS medicalInfo
+         p.blood_group AS bloodGroup,
+         p.medical_info AS medicalInfo,
+         p.emergency_contact_name AS emergencyContactName,
+         p.emergency_contact_relation AS emergencyContactRelation,
+         p.emergency_contact_phone AS emergencyContactPhone
        FROM users u
        JOIN patients p ON u.user_id = p.user_id
        WHERE u.user_id = ?`,
@@ -34,7 +40,10 @@ async function updateProfile(req, res, next) {
   const connection = await pool.getConnection();
   try {
     const { userId } = req.user;
-    const { name, phone, dateOfBirth, gender, address, medicalInfo } = req.body;
+    const { 
+      name, phone, dateOfBirth, gender, address, bloodGroup, medicalInfo, 
+      emergencyContactName, emergencyContactRelation, emergencyContactPhone 
+    } = req.body;
 
     if (!name || name.trim().length < 2) {
       return res.status(422).json({ message: 'Name must be at least 2 characters.' });
@@ -46,14 +55,19 @@ async function updateProfile(req, res, next) {
 
     await connection.query(
       `UPDATE patients
-       SET phone = ?, date_of_birth = ?, gender = ?, address = ?, medical_info = ?
+       SET phone = ?, date_of_birth = ?, gender = ?, address = ?, blood_group = ?, medical_info = ?,
+           emergency_contact_name = ?, emergency_contact_relation = ?, emergency_contact_phone = ?
        WHERE user_id = ?`,
       [
         phone || null,
         dateOfBirth || null,
         gender || null,
         address || null,
+        bloodGroup || null,
         medicalInfo || null,
+        emergencyContactName || null,
+        emergencyContactRelation || null,
+        emergencyContactPhone || null,
         userId
       ]
     );

@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS clinics (
 CREATE TABLE IF NOT EXISTS patients (
   patient_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NOT NULL UNIQUE,
-  phone VARCHAR(50), date_of_birth DATE, gender VARCHAR(50), address TEXT, medical_info TEXT,
+  phone VARCHAR(50), date_of_birth DATE, gender VARCHAR(50), address TEXT, blood_group VARCHAR(10), medical_info TEXT,
+  emergency_contact_name VARCHAR(255), emergency_contact_relation VARCHAR(100), emergency_contact_phone VARCHAR(50),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_patients_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
