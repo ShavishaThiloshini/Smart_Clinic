@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 
 const navigation = [
-  ['Dashboard', '⌂'],
-  ['Find a doctor', '⌕'],
-  ['My appointments', '▣'],
-  ['Medical records', '▤'],
-  ['Prescriptions', '▱'],
-  ['Notifications', '◌']
+  { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
+  { label: 'Find a doctor', icon: '⌕', path: '#' },
+  { label: 'My appointments', icon: '▣', path: '#' },
+  { label: 'Medical records', icon: '▤', path: '#' },
+  { label: 'Prescriptions', icon: '▱', path: '#' },
+  { label: 'Notifications', icon: '◌', path: '#' }
 ];
 
 export function PatientDashboard() {
@@ -33,9 +33,14 @@ export function PatientDashboard() {
       <aside className="patient-sidebar">
         <img className="patient-logo" src={logo} alt="Smart Clinic" />
         <nav aria-label="Patient navigation">
-          {navigation.map(([label, icon], index) => (
-            <button className={`patient-nav-link ${index === 0 ? 'active' : ''}`} key={label} type="button">
-              <span aria-hidden="true">{icon}</span>{label}
+          {navigation.map((nav, index) => (
+            <button 
+              className={`patient-nav-link ${index === 0 ? 'active' : ''}`} 
+              key={nav.label} 
+              type="button"
+              onClick={() => nav.path !== '#' && navigate(nav.path)}
+            >
+              <span aria-hidden="true">{nav.icon}</span>{nav.label}
             </button>
           ))}
         </nav>
@@ -47,7 +52,15 @@ export function PatientDashboard() {
           <button className="mobile-menu" type="button" aria-label="Open navigation">☰</button>
           <div className="patient-header-spacer" />
           <button className="notification-button" type="button" aria-label="Notifications">♧<span /></button>
-          <div className="patient-avatar" aria-hidden="true">{patientName.charAt(0).toUpperCase()}</div>
+          <div 
+            className="patient-avatar" 
+            aria-hidden="true" 
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate('/patient/profile')}
+            title="View Profile"
+          >
+            {patientName.charAt(0).toUpperCase()}
+          </div>
         </header>
 
         <div className="patient-page">
