@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import logo from './assets/images/logo.png';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { PatientDashboard } from './pages/patient/PatientDashboard';
 
 function LoadingScreen() {
   return <main className="loading-scene" aria-label="Loading Smart Clinic">
@@ -17,7 +18,6 @@ function LoadingScreen() {
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-<<<<<<< HEAD
   useEffect(() => {
     const timer = window.setTimeout(() => setIsLoading(false), 2300);
     return () => window.clearTimeout(timer);
@@ -31,13 +31,9 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
-=======
-  useEffect(() => { const timer = window.setTimeout(() => setIsLoading(false), 2300); return () => window.clearTimeout(timer); }, []);
-  if (isLoading) return <LoadingScreen />;
-  return <BrowserRouter><Routes><Route path="/" element={<Navigate to="/login" replace />} /><Route path="/login" element={<LoginPage />} /><Route path="/register" element={<RegisterPage />} /><Route path="*" element={<Navigate to="/login" replace />} /></Routes></BrowserRouter>;
->>>>>>> 6e5fd0774c8fc992ffe2d92eb1c36d54b377eb84
 }
