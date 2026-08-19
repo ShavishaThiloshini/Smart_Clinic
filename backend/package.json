@@ -7,13 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "db:init": "node src/config/init-db.js",
-<<<<<<< HEAD
     "db:seed": "node scripts/seed.js",
-    "test:auth": "node scripts/test-auth.js"
-=======
     "test:auth": "node scripts/test-auth.js",
     "test:middleware": "node scripts/test-auth-middleware.js"
->>>>>>> e868153090c4a54327e500b007a8fbc128066b01
   },
   "keywords": [
     "clinic",

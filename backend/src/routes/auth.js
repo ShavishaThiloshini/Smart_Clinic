@@ -1,11 +1,7 @@
 'use strict';
 
 const express = require('express');
-<<<<<<< HEAD
 const { login, register, logout, getMe } = require('../controllers/auth.controller');
-=======
-const { register, login, getMe } = require('../controllers/auth.controller');
->>>>>>> e868153090c4a54327e500b007a8fbc128066b01
 const { protect } = require('../middleware/auth.middleware');
 
 /**
@@ -22,7 +18,6 @@ const { protect } = require('../middleware/auth.middleware');
 function createAuthRouter() {
   const router = express.Router();
 
-<<<<<<< HEAD
   // ── Public ────────────────────────────────────────────────────────────────
 
   /**
@@ -30,8 +25,6 @@ function createAuthRouter() {
    * Body: { name, email, password, role }
    * role must be 'patient' or 'doctor' (admin accounts are created by admins only)
    */
-=======
->>>>>>> e868153090c4a54327e500b007a8fbc128066b01
   router.post('/register', register);
 
   /**
