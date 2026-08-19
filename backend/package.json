@@ -9,7 +9,8 @@
     "db:init": "node src/config/init-db.js",
     "db:seed": "node scripts/seed.js",
     "test:auth": "node scripts/test-auth.js",
-    "test:middleware": "node scripts/test-auth-middleware.js"
+    "test:middleware": "node scripts/test-auth-middleware.js",
+    "test:patient-profile": "node scripts/test-patient-profile-validation.js"
   },
   "keywords": [
     "clinic",
