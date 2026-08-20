@@ -49,6 +49,16 @@ Or use the helper script (PowerShell):
 - `GET /` → app info
 - `GET /api/health` → health check
 
+## Doctor search API
+
+These public endpoints return only active doctors whose profiles have been approved by an administrator.
+
+- `GET /api/doctors` — paginated doctor list
+- `GET /api/doctors?q=maya&specialization=cardiology&clinic=colombo&page=1&limit=12` — search doctors
+- `GET /api/doctors/:doctorId` — one doctor's public profile
+
+`limit` defaults to 12 and is capped at 50. Search results include professional details, consultation fee, and approved-review rating totals.
+
 ## MySQL note
 
 The init script creates `smart_clinic` and applies `src/config/schema.sql` automatically.
