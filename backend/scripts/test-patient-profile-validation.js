@@ -15,7 +15,11 @@ const validProfile = {
   dateOfBirth: '1998-05-14',
   gender: 'female',
   address: '12 Main Street, Colombo',
-  medicalInfo: 'No known allergies.'
+  medicalInfo: 'No known allergies.',
+  bloodGroup: 'O+',
+  emergencyContactName: 'Kamal Perera',
+  emergencyContactRelation: 'Father',
+  emergencyContactPhone: '+94 77 123 4567'
 };
 
 const validResult = validateProfile(validProfile);

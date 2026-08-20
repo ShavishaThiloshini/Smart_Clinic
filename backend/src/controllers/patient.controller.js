@@ -2,6 +2,7 @@
 const { pool } = require('../config/db');
 
 const ALLOWED_GENDERS = new Set(['male', 'female', 'other']);
+const ALLOWED_BLOOD_GROUPS = new Set(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
 
 function validationError(message, errors) {
   return { message, errors };
@@ -64,6 +65,15 @@ function validateProfile(payload) {
 
   const address = optionalText(body.address, 'address', 1000, errors);
   const medicalInfo = optionalText(body.medicalInfo, 'medicalInfo', 5000, errors);
+  const bloodGroup = optionalText(body.bloodGroup, 'bloodGroup', 5, errors);
+  if (bloodGroup && !ALLOWED_BLOOD_GROUPS.has(bloodGroup.toUpperCase())) errors.bloodGroup = 'bloodGroup must be a valid blood group.';
+  const emergencyContactName = optionalText(body.emergencyContactName, 'emergencyContactName', 100, errors);
+  const emergencyContactRelation = optionalText(body.emergencyContactRelation, 'emergencyContactRelation', 100, errors);
+  const emergencyContactPhone = optionalText(body.emergencyContactPhone, 'emergencyContactPhone', 50, errors);
+  if (emergencyContactPhone) {
+    const digits = emergencyContactPhone.replace(/\D/g, '');
+    if (!/^[+()\d\s.-]+$/.test(emergencyContactPhone) || digits.length < 7 || digits.length > 15) errors.emergencyContactPhone = 'emergencyContactPhone must contain 7 to 15 digits.';
+  }
 
   if (Object.keys(errors).length > 0) {
     return { error: validationError('Please correct the highlighted profile fields.', errors) };
@@ -71,7 +81,9 @@ function validateProfile(payload) {
 
   return {
     value: {
-      name: name.trim(), phone, dateOfBirth, gender, address, medicalInfo
+      name: name.trim(), phone, dateOfBirth, gender, address, medicalInfo,
+      bloodGroup: bloodGroup ? bloodGroup.toUpperCase() : null,
+      emergencyContactName, emergencyContactRelation, emergencyContactPhone
     }
   };
 }
@@ -82,13 +94,19 @@ async function getProfile(req, res, next) {
 
     const [rows] = await pool.query(
       `SELECT
+         p.patient_id AS patientId,
          u.name,
          u.email,
          p.phone,
          p.date_of_birth AS dateOfBirth,
          p.gender,
          p.address,
-         p.medical_info AS medicalInfo
+         p.medical_info AS medicalInfo,
+         p.blood_group AS bloodGroup,
+         p.emergency_contact_name AS emergencyContactName,
+         p.emergency_contact_relation AS emergencyContactRelation,
+         p.emergency_contact_phone AS emergencyContactPhone,
+         DATE_FORMAT(p.created_at, '%Y') AS memberSince
        FROM users u
        JOIN patients p ON u.user_id = p.user_id
        WHERE u.user_id = ?`,
@@ -112,7 +130,7 @@ async function updateProfile(req, res, next) {
     if (validation.error) {
       return res.status(422).json({ success: false, ...validation.error });
     }
-    const { name, phone, dateOfBirth, gender, address, medicalInfo } = validation.value;
+    const { name, phone, dateOfBirth, gender, address, medicalInfo, bloodGroup, emergencyContactName, emergencyContactRelation, emergencyContactPhone } = validation.value;
     const connection = await pool.getConnection();
 
     try {
@@ -120,9 +138,10 @@ async function updateProfile(req, res, next) {
 
       const [patientUpdate] = await connection.query(
         `UPDATE patients
-         SET phone = ?, date_of_birth = ?, gender = ?, address = ?, medical_info = ?
+         SET phone = ?, date_of_birth = ?, gender = ?, address = ?, medical_info = ?, blood_group = ?,
+             emergency_contact_name = ?, emergency_contact_relation = ?, emergency_contact_phone = ?
          WHERE user_id = ?`,
-        [phone, dateOfBirth, gender, address, medicalInfo, userId]
+        [phone, dateOfBirth, gender, address, medicalInfo, bloodGroup, emergencyContactName, emergencyContactRelation, emergencyContactPhone, userId]
       );
 
       if (patientUpdate.affectedRows === 0) {

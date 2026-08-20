@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import {
+  EmergencyContact,
+  HealthSummaryCard,
+  InformationSection,
+  LoadingSkeleton,
+  ProfileCompletion,
+  ProfileHeader
+} from '../../components/patient/profile';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -14,16 +22,11 @@ const navigation = [
 export function PatientProfilePage() {
   const navigate = useNavigate();
   
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    dateOfBirth: '',
-    gender: '',
-    address: '',
-    medicalInfo: ''
-  });
+  const [profile, setProfile] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Record<string, string>>({});
   
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -51,17 +54,18 @@ export function PatientProfilePage() {
       
       const json = await res.json();
       if (res.ok && json.success) {
-        setFormData({
-          name: json.profile.name || '',
-          phone: json.profile.phone || '',
-          dateOfBirth: json.profile.dateOfBirth ? json.profile.dateOfBirth.split('T')[0] : '',
-          gender: json.profile.gender || '',
-          address: json.profile.address || '',
-          medicalInfo: json.profile.medicalInfo || ''
-        });
+        const loadedProfile = {
+          ...json.profile,
+          dateOfBirth: json.profile.dateOfBirth ? json.profile.dateOfBirth.split('T')[0] : ''
+        };
+        setProfile(loadedProfile);
+        setFormData(loadedProfile);
+      } else {
+        setMessage({ type: 'error', text: json.message || 'Unable to load profile data right now.' });
       }
     } catch (err) {
       console.error('Failed to load profile', err);
+      setMessage({ type: 'error', text: 'Unable to load profile data right now.' });
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +91,8 @@ export function PatientProfilePage() {
       
       if (res.ok) {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        setProfile(formData);
+        setIsEditing(false);
         
         // Update local storage name if it changed
         const savedUser = JSON.parse(localStorage.getItem('sc_user') || '{}');
@@ -107,6 +113,15 @@ export function PatientProfilePage() {
     localStorage.removeItem('sc_user');
     navigate('/login', { replace: true });
   }
+
+  const personalInfo = [
+    { label: 'Full Name', value: profile.name },
+    { label: 'Email', value: profile.email },
+    { label: 'Phone Number', value: profile.phone },
+    { label: 'Date of Birth', value: profile.dateOfBirth },
+    { label: 'Gender', value: profile.gender },
+    { label: 'Address', value: profile.address }
+  ];
 
   return (
     <main className="patient-shell">
@@ -132,29 +147,15 @@ export function PatientProfilePage() {
           <button className="mobile-menu" type="button" aria-label="Open navigation">☰</button>
           <div className="patient-header-spacer" />
           <button className="notification-button" type="button" aria-label="Notifications">♧<span /></button>
-          <div className="patient-avatar" aria-hidden="true">{patientInitials}</div>
+          <button className="patient-avatar" type="button" onClick={() => navigate('/patient/profile')} aria-label="Open profile">{patientInitials}</button>
         </header>
 
-        <div className="patient-page">
-          <section className="patient-welcome">
-            <div>
-              <p className="patient-eyebrow">PATIENT PROFILE</p>
-              <h1>Personal Information</h1>
-              <p>View and update your personal and medical details.</p>
-            </div>
-          </section>
-
-          <article className="profile-card dashboard-form-container">
-            {isLoading ? (
-              <p style={{ color: '#71809a' }}>Loading profile information...</p>
-            ) : (
+        <div className="patient-page profile-redesign">
+          {message.text && <div className={`profile-message ${message.type}`}>{message.text}</div>}
+          {isLoading ? <LoadingSkeleton /> : isEditing ? (
+            <article className="profile-card dashboard-form-container">
+              <h2>Edit Profile</h2>
               <form className="dashboard-form" onSubmit={handleSubmit}>
-                {message.text && (
-                  <div className={message.type === 'success' ? 'success-message' : 'form-error'}>
-                    {message.text}
-                  </div>
-                )}
-                
                 <label>
                   Full Name
                   <input 
@@ -218,16 +219,44 @@ export function PatientProfilePage() {
                     rows={4}
                   />
                 </label>
+                <label>
+                  Blood Group
+                  <select value={formData.bloodGroup || ''} onChange={(e) => setFormData({...formData, bloodGroup: e.target.value})}>
+                    <option value="">Select blood group</option>
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((group) => <option key={group} value={group}>{group}</option>)}
+                  </select>
+                </label>
+                <h3 style={{ margin: '8px 0 0', color: '#243451', fontSize: '1.05rem' }}>Emergency Contact</h3>
+                <div className="dashboard-form-row">
+                  <label>Contact Name<input type="text" value={formData.emergencyContactName || ''} onChange={(e) => setFormData({...formData, emergencyContactName: e.target.value})} /></label>
+                  <label>Relationship<input type="text" value={formData.emergencyContactRelation || ''} onChange={(e) => setFormData({...formData, emergencyContactRelation: e.target.value})} /></label>
+                  <label>Phone Number<input type="tel" value={formData.emergencyContactPhone || ''} onChange={(e) => setFormData({...formData, emergencyContactPhone: e.target.value})} /></label>
+                </div>
                 
                 <div className="dashboard-form-actions">
-                  <button type="button" className="secondary-action" onClick={() => navigate('/patient/dashboard')}>Cancel</button>
+                  <button type="button" className="secondary-action" onClick={() => { setFormData(profile); setIsEditing(false); }}>Cancel</button>
                   <button type="submit" className="primary-action" disabled={isSaving}>
                     {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>
-            )}
-          </article>
+            </article>
+          ) : (
+            <div className="profile-view-layout">
+              <ProfileHeader profile={profile} onEdit={() => setIsEditing(true)} />
+              <ProfileCompletion profile={profile} />
+              <HealthSummaryCard
+                age={profile.dateOfBirth ? new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear() : undefined}
+                bloodGroup={profile.bloodGroup}
+                gender={profile.gender}
+                memberSince={profile.memberSince}
+              />
+              <div className="profile-grid">
+                <InformationSection title="Personal Information" data={personalInfo} />
+                <EmergencyContact contact={{ name: profile.emergencyContactName, relation: profile.emergencyContactRelation, phone: profile.emergencyContactPhone }} />
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </main>
