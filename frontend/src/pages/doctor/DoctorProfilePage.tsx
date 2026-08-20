@@ -11,6 +11,7 @@ type DoctorProfile = {
   experience: string;
   consultationFee: string;
   bio: string;
+  approvalStatus?: string;
 };
 
 const emptyProfile: DoctorProfile = {
@@ -26,6 +27,10 @@ export function DoctorProfilePage() {
   const [notice, setNotice] = useState<{ type: 'success' | 'error' | ''; text: string }>({ type: '', text: '' });
 
   const initials = useMemo(() => profile.name.split(' ').filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'DR', [profile.name]);
+  const profileProgress = useMemo(() => {
+    const fields = [profile.name, profile.specialization, profile.clinic, profile.qualifications, profile.experience, profile.consultationFee, profile.bio];
+    return Math.round((fields.filter((field) => Boolean(field?.trim())).length / fields.length) * 100);
+  }, [profile]);
 
   useEffect(() => {
     const savedUser = JSON.parse(localStorage.getItem('sc_user') || '{}');
@@ -112,7 +117,19 @@ export function DoctorProfilePage() {
       <div className="doctor-profile-page">
         <p className="doctor-profile-kicker">PROFESSIONAL PROFILE</p>
         <h1>My Doctor Profile</h1>
-        <p className="doctor-profile-intro">Keep your qualifications and practice information current for patients.</p>
+        <p className="doctor-profile-intro">Build a clear, trustworthy profile that patients can understand before booking.</p>
+        <section className="doctor-profile-overview" aria-label="Profile overview">
+          <article className="doctor-public-preview">
+            <div className="doctor-preview-avatar">{initials}</div>
+            <div><span>PUBLIC PROFILE PREVIEW</span><h2>{profile.name || 'Your name'}</h2><p>{profile.specialization || 'Add your specialization'} · {profile.clinic || 'Add your clinic'}</p></div>
+            <strong className={`doctor-approval ${profile.approvalStatus || 'pending'}`}>{profile.approvalStatus === 'approved' ? 'Verified' : 'Profile review'}</strong>
+          </article>
+          <article className="doctor-completion-card">
+            <div><span>PROFILE READY</span><strong>{profileProgress}%</strong></div>
+            <div className="doctor-progress"><i style={{ width: `${profileProgress}%` }} /></div>
+            <p>{profileProgress === 100 ? 'Your profile is ready for patients.' : 'Complete your practice details to help patients choose you.'}</p>
+          </article>
+        </section>
         <form className="doctor-profile-card" onSubmit={saveProfile}>
           {notice.text && <div className={`doctor-notice ${notice.type}`}>{notice.text}</div>}
           {loading ? <p className="doctor-loading">Loading profile information...</p> : <>
@@ -130,6 +147,7 @@ export function DoctorProfilePage() {
               <label>Qualifications<textarea value={profile.qualifications} onChange={(event) => update('qualifications', event.target.value)} maxLength={1000} placeholder="Degrees, certifications, and areas of expertise" rows={3} /></label>
               <label>About me<textarea value={profile.bio} onChange={(event) => update('bio', event.target.value)} maxLength={2000} placeholder="Introduce your experience and approach to patient care" rows={5} /></label>
             </section>
+            <aside className="doctor-profile-tip"><span>✦ Profile tip</span><p>Patients usually look first for a specialty, clinic, qualifications, and consultation fee. Add these details to make your profile easier to trust.</p></aside>
             <footer className="doctor-form-actions"><button type="button" className="doctor-cancel" onClick={() => navigate('/doctor/profile')}>Reset</button><button type="submit" className="doctor-save" disabled={saving}>{saving ? 'Saving...' : 'Save profile'}</button></footer>
           </>}
         </form>
