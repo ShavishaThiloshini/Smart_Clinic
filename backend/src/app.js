@@ -4,7 +4,7 @@ const { createHealthRouter } = require('./routes/health');
 const { createAuthRouter }  = require('./routes/auth');
 const { createAdminRouter } = require('./routes/admin');
 const { createPatientRouter } = require('./routes/patient');
-const { createDoctorRouter } = require('./routes/doctor');
+const { createDoctorRouter, createPublicDoctorRouter } = require('./routes/doctor');
 
 const app = express();
 
@@ -24,7 +24,8 @@ app.use('/api',       createHealthRouter());
 app.use('/api/auth',  createAuthRouter());
 app.use('/api/admin', createAdminRouter());
 app.use('/api/patient', createPatientRouter());
-app.use('/api/doctor', createDoctorRouter());
+app.use('/api/doctor',  createDoctorRouter());       // Protected: doctor role
+app.use('/api/doctors', createPublicDoctorRouter());  // Public: search & discovery
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

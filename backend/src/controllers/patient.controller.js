@@ -1,4 +1,15 @@
 'use strict';
+
+/**
+ * patient.controller.js
+ *
+ * Handles all HTTP logic for the Patient module.
+ *
+ * Protected routes (patient role — require JWT):
+ *   GET  /api/patient/profile  → getProfile
+ *   PUT  /api/patient/profile  → updateProfile
+ */
+
 const { pool } = require('../config/db');
 
 const ALLOWED_GENDERS = new Set(['male', 'female', 'other']);
@@ -114,20 +125,11 @@ async function getProfile(req, res, next) {
 async function updateProfile(req, res, next) {
   try {
     const { userId } = req.user;
-<<<<<<< HEAD
-    const { 
-      name, phone, dateOfBirth, gender, address, bloodGroup, medicalInfo, 
-      emergencyContactName, emergencyContactRelation, emergencyContactPhone 
-    } = req.body;
-
-    if (!name || name.trim().length < 2) {
-      return res.status(422).json({ message: 'Name must be at least 2 characters.' });
-=======
     const validation = validateProfile(req.body);
     if (validation.error) {
       return res.status(422).json({ success: false, ...validation.error });
->>>>>>> db0e53b292ee3f196f2f650ec14d245cd4849e94
     }
+
     const { name, phone, dateOfBirth, gender, address, medicalInfo } = validation.value;
     const connection = await pool.getConnection();
 
@@ -141,31 +143,10 @@ async function updateProfile(req, res, next) {
         [phone, dateOfBirth, gender, address, medicalInfo, userId]
       );
 
-<<<<<<< HEAD
-    await connection.query(
-      `UPDATE patients
-       SET phone = ?, date_of_birth = ?, gender = ?, address = ?, blood_group = ?, medical_info = ?,
-           emergency_contact_name = ?, emergency_contact_relation = ?, emergency_contact_phone = ?
-       WHERE user_id = ?`,
-      [
-        phone || null,
-        dateOfBirth || null,
-        gender || null,
-        address || null,
-        bloodGroup || null,
-        medicalInfo || null,
-        emergencyContactName || null,
-        emergencyContactRelation || null,
-        emergencyContactPhone || null,
-        userId
-      ]
-    );
-=======
       if (patientUpdate.affectedRows === 0) {
         await connection.rollback();
         return res.status(404).json({ success: false, message: 'Patient profile not found.' });
       }
->>>>>>> db0e53b292ee3f196f2f650ec14d245cd4849e94
 
       await connection.query('UPDATE users SET name = ? WHERE user_id = ?', [name, userId]);
       await connection.commit();
