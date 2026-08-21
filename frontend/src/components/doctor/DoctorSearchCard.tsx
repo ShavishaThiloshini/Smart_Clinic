@@ -6,8 +6,8 @@ interface DoctorSearchCardProps {
     name: string;
     specialization: string | null;
     clinic: string | null;
-    experience: number;
-    consultationFee: number;
+    experience: number | null;
+    consultationFee: number | null;
     rating: number;
     reviewCount: number;
   };
@@ -32,11 +32,11 @@ export function DoctorSearchCard({ doctor }: DoctorSearchCardProps) {
       <div className="doctor-card-body">
         <div className="doctor-stat">
           <span className="stat-label">Experience:</span>
-          <span className="stat-value">{doctor.experience} Years</span>
+          <span className="stat-value">{doctor.experience ?? 'Not listed'}{doctor.experience !== null ? ' Years' : ''}</span>
         </div>
         <div className="doctor-stat">
           <span className="stat-label">Consultation:</span>
-          <span className="stat-value">Rs. {doctor.consultationFee}</span>
+          <span className="stat-value">{doctor.consultationFee !== null ? `Rs. ${doctor.consultationFee}` : 'Not listed'}</span>
         </div>
         <div className="doctor-stat">
           <span className="stat-label">Clinic:</span>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DoctorSearchCard } from '../../components/doctor/DoctorSearchCard';
 import logo from '../../assets/images/logo.png';
@@ -12,14 +12,31 @@ const navigation = [
   { label: 'Notifications', icon: '◌', path: '#' }
 ];
 
+type Doctor = {
+  doctorId: number;
+  name: string;
+  specialization: string | null;
+  clinic: string | null;
+  experience: number | null;
+  consultationFee: number | null;
+  rating: number;
+  reviewCount: number;
+};
+
+type SortOption = 'name' | 'experience' | 'fee-low' | 'rating';
+
+const specializations = ['Cardiologist', 'Dermatologist', 'Neurologist', 'Pediatrician', 'General Practitioner'];
+
 export function DoctorSearchPage() {
   const navigate = useNavigate();
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
   const [searchQuery, setSearchQuery] = useState('');
   const [specialization, setSpecialization] = useState('');
+  const [clinic, setClinic] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('name');
 
   const patientName = useMemo(() => {
     try {
@@ -40,13 +57,14 @@ export function DoctorSearchPage() {
     fetchDoctors();
   }, []);
 
-  async function fetchDoctors() {
+  async function fetchDoctors(filters = { query: searchQuery, specialty: specialization, clinicName: clinic }) {
     setIsLoading(true);
     setError('');
     try {
       const params = new URLSearchParams();
-      if (searchQuery.trim()) params.append('q', searchQuery.trim());
-      if (specialization.trim()) params.append('specialization', specialization.trim());
+      if (filters.query.trim()) params.append('q', filters.query.trim());
+      if (filters.specialty.trim()) params.append('specialization', filters.specialty.trim());
+      if (filters.clinicName.trim()) params.append('clinic', filters.clinicName.trim());
 
       const res = await fetch(`/api/doctors?${params.toString()}`, {
         headers: {
@@ -68,10 +86,27 @@ export function DoctorSearchPage() {
     }
   }
 
-  function handleSearch(e: React.FormEvent) {
+  function handleSearch(e: FormEvent) {
     e.preventDefault();
     fetchDoctors();
   }
+
+  function clearFilters() {
+    setSearchQuery('');
+    setSpecialization('');
+    setClinic('');
+    setSortBy('name');
+    fetchDoctors({ query: '', specialty: '', clinicName: '' });
+  }
+
+  const filteredDoctors = useMemo(() => [...doctors].sort((first, second) => {
+    if (sortBy === 'rating') return Number(second.rating) - Number(first.rating);
+    if (sortBy === 'experience') return Number(second.experience || 0) - Number(first.experience || 0);
+    if (sortBy === 'fee-low') return Number(first.consultationFee || 0) - Number(second.consultationFee || 0);
+    return first.name.localeCompare(second.name);
+  }), [doctors, sortBy]);
+
+  const activeFilterCount = [searchQuery, specialization, clinic].filter((value) => value.trim()).length;
 
   return (
     <main className="patient-shell">
@@ -117,7 +152,7 @@ export function DoctorSearchPage() {
             </div>
           </header>
 
-          <section className="search-section card">
+          <section className="search-section card" aria-label="Doctor filters">
             <form onSubmit={handleSearch} className="search-form">
               <div className="form-group">
                 <label htmlFor="searchQuery">Doctor Name or Clinic</label>
@@ -138,11 +173,7 @@ export function DoctorSearchPage() {
                   onChange={(e) => setSpecialization(e.target.value)}
                 >
                   <option value="">All Specializations</option>
-                  <option value="Cardiologist">Cardiologist</option>
-                  <option value="Dermatologist">Dermatologist</option>
-                  <option value="Neurologist">Neurologist</option>
-                  <option value="Pediatrician">Pediatrician</option>
-                  <option value="General Practitioner">General Practitioner</option>
+                  {specializations.map((item) => <option key={item} value={item}>{item}</option>)}
                 </select>
               </div>
               
@@ -152,20 +183,41 @@ export function DoctorSearchPage() {
                 </button>
               </div>
             </form>
+            <div className="doctor-filter-bar">
+              <div className="filter-control">
+                <label htmlFor="clinic">Clinic</label>
+                <input id="clinic" value={clinic} onChange={(e) => setClinic(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') fetchDoctors(); }} placeholder="Any clinic" />
+              </div>
+              <div className="filter-control">
+                <label htmlFor="doctorSort">Sort results</label>
+                <select id="doctorSort" value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}>
+                  <option value="name">Name: A–Z</option>
+                  <option value="rating">Highest rated</option>
+                  <option value="experience">Most experience</option>
+                  <option value="fee-low">Lowest fee</option>
+                </select>
+              </div>
+              <button className="clear-doctor-filters" type="button" onClick={clearFilters} disabled={!activeFilterCount && sortBy === 'name'}>Clear filters</button>
+            </div>
+            <div className="filter-summary" aria-live="polite">
+              <span>{activeFilterCount ? `${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} applied` : 'Showing all available doctors'}</span>
+              {specialization && <button type="button" onClick={() => { setSpecialization(''); fetchDoctors({ query: searchQuery, specialty: '', clinicName: clinic }); }}>{specialization} ×</button>}
+              {clinic && <button type="button" onClick={() => { setClinic(''); fetchDoctors({ query: searchQuery, specialty: specialization, clinicName: '' }); }}>{clinic} ×</button>}
+            </div>
           </section>
 
           {error && <div className="alert-error">{error}</div>}
 
           <section className="results-section">
             <h2 className="section-title">
-              {doctors.length} {doctors.length === 1 ? 'Doctor' : 'Doctors'} Found
+              {filteredDoctors.length} {filteredDoctors.length === 1 ? 'Doctor' : 'Doctors'} Found
             </h2>
             
             {isLoading ? (
               <div className="loading-spinner">Loading doctors...</div>
             ) : (
               <div className="doctor-grid">
-                {doctors.map(doctor => (
+                {filteredDoctors.map(doctor => (
                   <DoctorSearchCard key={doctor.doctorId} doctor={doctor} />
                 ))}
                 {doctors.length === 0 && !isLoading && !error && (
