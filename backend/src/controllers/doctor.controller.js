@@ -33,17 +33,20 @@ async function updateProfile(req, res, next) {
   const connection = await pool.getConnection();
   try {
     const { name, specialization = '', clinic = '', qualifications = '', experience = null, consultationFee = null, bio = '' } = req.body;
-    if (!name || name.trim().length < 2) return res.status(422).json({ success: false, message: 'Name must contain at least 2 characters.' });
+    const cleanName = typeof name === 'string' ? name.trim() : '';
+    const cleanQualifications = typeof qualifications === 'string' ? qualifications.trim() : '';
+    const cleanBio = typeof bio === 'string' ? bio.trim() : '';
+    if (cleanName.length < 2) return res.status(422).json({ success: false, message: 'Name must contain at least 2 characters.' });
     if (experience !== null && (!Number.isInteger(experience) || experience < 0 || experience > 80)) return res.status(422).json({ success: false, message: 'Experience must be a whole number from 0 to 80.' });
     if (consultationFee !== null && (!Number.isFinite(consultationFee) || consultationFee < 0)) return res.status(422).json({ success: false, message: 'Consultation fee must be a positive amount.' });
 
     await connection.beginTransaction();
     const specializationId = await findOrCreateByName(connection, 'specializations', specialization);
     const clinicId = await findOrCreateByName(connection, 'clinics', clinic);
-    await connection.query('UPDATE users SET name = ? WHERE user_id = ?', [name.trim(), req.user.userId]);
+    await connection.query('UPDATE users SET name = ? WHERE user_id = ?', [cleanName, req.user.userId]);
     const [result] = await connection.query(
       `UPDATE doctors SET specialization_id = ?, clinic_id = ?, qualifications = ?, experience = ?, consultation_fee = ?, bio = ? WHERE user_id = ?`,
-      [specializationId, clinicId, qualifications.trim() || null, experience, consultationFee, bio.trim() || null, req.user.userId]
+      [specializationId, clinicId, cleanQualifications || null, experience, consultationFee, cleanBio || null, req.user.userId]
     );
     if (!result.affectedRows) { await connection.rollback(); return res.status(404).json({ success: false, message: 'Doctor profile not found.' }); }
     await connection.commit();

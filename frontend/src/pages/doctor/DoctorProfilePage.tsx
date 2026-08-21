@@ -43,7 +43,7 @@ export function DoctorProfilePage() {
         });
         const result = await response.json();
         if (response.ok && result.success) {
-          setProfile((current) => ({ ...current, ...result.profile, experience: result.profile.experience?.toString() || '', consultationFee: result.profile.consultationFee?.toString() || '' }));
+          setProfile((current) => ({ ...current, ...result.profile, specialization: result.profile.specialization || '', clinic: result.profile.clinic || '', qualifications: result.profile.qualifications || '', bio: result.profile.bio || '', experience: result.profile.experience?.toString() || '', consultationFee: result.profile.consultationFee?.toString() || '' }));
         } else if (response.status !== 404) {
           setNotice({ type: 'error', text: result.message || 'Unable to load your profile.' });
         }
