@@ -11,7 +11,9 @@
     "db:migrate:patient-profile": "node scripts/migrate-patient-profile.js",
     "test:auth": "node scripts/test-auth.js",
     "test:middleware": "node scripts/test-auth-middleware.js",
-    "test:patient-profile": "node scripts/test-patient-profile-validation.js"
+    "test:patient-profile": "node scripts/test-patient-profile-validation.js",
+    "test:availability": "node scripts/test-availability-validation.js",
+    "test:availability-api": "node scripts/test-availability.js"
   },
   "keywords": [
     "clinic",

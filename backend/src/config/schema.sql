@@ -51,7 +51,8 @@ CREATE TABLE IF NOT EXISTS doctor_availability (
   availability_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   doctor_id INT UNSIGNED NOT NULL, day_of_week VARCHAR(20) NOT NULL, start_time TIME NOT NULL, end_time TIME NOT NULL,
   slot_duration INT UNSIGNED NOT NULL DEFAULT 30, status BOOLEAN NOT NULL DEFAULT TRUE,
-  CONSTRAINT fk_availability_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE
+  CONSTRAINT fk_availability_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE,
+  INDEX idx_availability_doctor (doctor_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS appointments (
