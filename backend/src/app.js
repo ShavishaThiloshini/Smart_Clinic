@@ -7,6 +7,7 @@ const { createPatientRouter } = require('./routes/patient');
 const { createDoctorRouter } = require('./routes/doctor');
 const { createDoctorSearchRouter } = require('./routes/doctor-search');
 const { createSpecializationRouter } = require('./routes/specialization');
+const { createDoctorAvailabilityRouter } = require('./routes/doctor-availability');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/auth',  createAuthRouter());
 app.use('/api/admin', createAdminRouter());
 app.use('/api/patient', createPatientRouter());
 app.use('/api/doctor', createDoctorRouter());
+app.use('/api/doctor/availability', createDoctorAvailabilityRouter());
 app.use('/api/doctors', createDoctorSearchRouter());
 app.use('/api/specializations', createSpecializationRouter());
 
