@@ -6,6 +6,7 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { PatientDashboard } from './pages/patient/PatientDashboard';
 import { PatientProfilePage } from './pages/patient/PatientProfilePage';
 import { DoctorProfilePage } from './pages/doctor/DoctorProfilePage';
+import { AvailabilityPage } from './pages/doctor/AvailabilityPage';
 import { DoctorSearchPage } from './pages/patient/DoctorSearchPage';
 function LoadingScreen() {
   return <main className="loading-scene" aria-label="Loading Smart Clinic">
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/patient/search" element={<DoctorSearchPage />} />
         <Route path="/doctor/dashboard" element={<Navigate to="/doctor/profile" replace />} />
         <Route path="/doctor/profile" element={<DoctorProfilePage />} />
+        <Route path="/doctor/availability" element={<AvailabilityPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
