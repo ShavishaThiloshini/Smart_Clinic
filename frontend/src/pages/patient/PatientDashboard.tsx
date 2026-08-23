@@ -70,7 +70,7 @@ export function PatientDashboard() {
               <h1>Good morning, {patientName.split(' ')[0]}.</h1>
               <p>Here is a clear view of your care and upcoming visits.</p>
             </div>
-            <button className="find-doctor-button" type="button">⌕ Find a doctor</button>
+            <button className="find-doctor-button" type="button" onClick={() => navigate('/patient/search')}>⌕ Find a doctor</button>
           </section>
 
           <section className="dashboard-grid">
