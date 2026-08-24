@@ -47,6 +47,53 @@ const SEEDS = [
   }
 ];
 
+async function ensureDiscoveryFixtures(connection) {
+  const specializations = ['Cardiologist', 'Dermatologist', 'General Practitioner'];
+
+  for (const name of specializations) {
+    await connection.query(
+      'INSERT IGNORE INTO specializations (name) VALUES (?)',
+      [name]
+    );
+  }
+
+  const [clinicRows] = await connection.query(
+    'SELECT clinic_id FROM clinics WHERE name = ?',
+    ['Smart Clinic Colombo']
+  );
+
+  let clinicId = clinicRows[0]?.clinic_id;
+  if (!clinicId) {
+    const [createdClinic] = await connection.query(
+      'INSERT INTO clinics (name, address, phone) VALUES (?, ?, ?)',
+      ['Smart Clinic Colombo', '12 Galle Road, Colombo', '+94 11 234 5678']
+    );
+    clinicId = createdClinic.insertId;
+  }
+
+  const [specRows] = await connection.query(
+    'SELECT specialization_id FROM specializations WHERE name = ?',
+    ['General Practitioner']
+  );
+  const specializationId = specRows[0]?.specialization_id || null;
+
+  await connection.query(
+    `UPDATE doctors d
+     JOIN users u ON u.user_id = d.user_id
+     SET d.approval_status = 'approved',
+         d.specialization_id = COALESCE(d.specialization_id, ?),
+         d.clinic_id = COALESCE(d.clinic_id, ?),
+         d.experience = COALESCE(d.experience, 10),
+         d.consultation_fee = COALESCE(d.consultation_fee, 2500.00),
+         d.qualifications = COALESCE(d.qualifications, 'MBBS, MD (General Medicine)'),
+         d.bio = COALESCE(d.bio, 'Experienced general practitioner available for online appointments.')
+     WHERE u.email = 'doctor@smartclinic.com'`,
+    [specializationId, clinicId]
+  );
+
+  console.log('\n  ✅  Discovery fixtures ready (approved demo doctor + specializations)');
+}
+
 async function seed() {
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST || 'localhost',
@@ -103,6 +150,8 @@ async function seed() {
       console.error(`  ❌  Failed   ${seed.role.padEnd(8)}  ${seed.email}  — ${err.message}`);
     }
   }
+
+  await ensureDiscoveryFixtures(connection);
 
   await connection.end();
 

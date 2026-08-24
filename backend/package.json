@@ -12,8 +12,13 @@
     "test:auth": "node scripts/test-auth.js",
     "test:middleware": "node scripts/test-auth-middleware.js",
     "test:patient-profile": "node scripts/test-patient-profile-validation.js",
+    "test:patient-profile-api": "node scripts/test-patient-profile-api.js",
+    "test:doctor-profile-api": "node scripts/test-doctor-profile-api.js",
+    "test:doctor-search": "node scripts/test-doctor-search.js",
     "test:availability": "node scripts/test-availability-validation.js",
-    "test:availability-api": "node scripts/test-availability.js"
+    "test:availability-api": "node scripts/test-availability.js",
+    "test:milestone1": "node scripts/test-milestone1.js",
+    "test:day10": "node scripts/test-milestone1.js"
   },
   "keywords": [
     "clinic",
