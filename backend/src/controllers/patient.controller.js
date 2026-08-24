@@ -152,7 +152,32 @@ async function updateProfile(req, res, next) {
       await connection.query('UPDATE users SET name = ? WHERE user_id = ?', [name, userId]);
       await connection.commit();
 
-      return res.status(200).json({ success: true, message: 'Profile updated successfully.' });
+      const [rows] = await pool.query(
+        `SELECT
+           p.patient_id AS patientId,
+           u.name,
+           u.email,
+           p.phone,
+           p.date_of_birth AS dateOfBirth,
+           p.gender,
+           p.address,
+           p.medical_info AS medicalInfo,
+           p.blood_group AS bloodGroup,
+           p.emergency_contact_name AS emergencyContactName,
+           p.emergency_contact_relation AS emergencyContactRelation,
+           p.emergency_contact_phone AS emergencyContactPhone,
+           DATE_FORMAT(p.created_at, '%Y') AS memberSince
+         FROM users u
+         JOIN patients p ON u.user_id = p.user_id
+         WHERE u.user_id = ?`,
+        [userId]
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully.',
+        profile: rows[0]
+      });
     } catch (err) {
       await connection.rollback();
       throw err;

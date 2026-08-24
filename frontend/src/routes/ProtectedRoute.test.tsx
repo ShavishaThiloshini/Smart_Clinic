@@ -15,6 +15,7 @@ function renderProtectedRoute(token?: string, role?: string) {
         </Route>
         <Route path="/login" element={<div>Login page</div>} />
         <Route path="/patient/dashboard" element={<div>Patient dashboard</div>} />
+        <Route path="/doctor/dashboard" element={<div>Doctor dashboard</div>} />
       </Routes>
     </MemoryRouter>
   );
@@ -33,6 +34,6 @@ describe('ProtectedRoute', () => {
 
   it('redirects disallowed roles away from protected content', () => {
     renderProtectedRoute('valid-token', 'doctor');
-    expect(screen.getByText('Patient dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Doctor dashboard')).toBeInTheDocument();
   });
 });

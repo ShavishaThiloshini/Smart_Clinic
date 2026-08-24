@@ -21,7 +21,7 @@ describe('AppRouter', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Create account')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Create account' })).toBeInTheDocument();
   });
 
   it('protects patient routes without a token', () => {
@@ -44,6 +44,6 @@ describe('AppRouter', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/Sample Patient/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Good morning, Sample\./i })).toBeInTheDocument();
   });
 });

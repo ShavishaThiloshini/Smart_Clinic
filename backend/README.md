@@ -48,6 +48,23 @@ Or use the helper script (PowerShell):
 
 - `GET /` → app info
 - `GET /api/health` → health check
+- `GET /api/appointments` → authenticated patient/doctor appointment list
+- `POST /api/appointments` → patient books an available doctor slot
+
+### Appointment booking API
+
+`POST /api/appointments` requires a patient JWT and accepts:
+
+```json
+{
+	"doctorId": 1,
+	"appointmentDate": "2099-01-05",
+	"startTime": "09:00",
+	"reason": "Routine consultation"
+}
+```
+
+The API accepts only active, approved doctors and active availability slots. It calculates the end time from the configured slot duration, assigns a queue number, creates a `pending` appointment, and returns `409` when the time is unavailable or already booked.
 
 ## Doctor search API
 

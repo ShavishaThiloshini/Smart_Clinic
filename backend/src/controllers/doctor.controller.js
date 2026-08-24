@@ -23,9 +23,13 @@ async function getProfile(req, res, next) {
 
 async function findOrCreateByName(connection, table, name) {
   if (!name?.trim()) return null;
-  const [existing] = await connection.query(`SELECT ${table.slice(0, -1)}_id AS id FROM ${table} WHERE name = ?`, [name.trim()]);
-  if (existing.length) return existing[0].id;
-  const [created] = await connection.query(`INSERT INTO ${table} (name) VALUES (?)`, [name.trim()]);
+  const cleanName = name.trim();
+  const [existing] = await connection.query(`SELECT ${table.slice(0, -1)}_id AS id FROM ${table} WHERE name = ?`, [cleanName]);
+  if (existing.length) {
+    await connection.query(`UPDATE ${table} SET name = ? WHERE ${table.slice(0, -1)}_id = ?`, [cleanName, existing[0].id]);
+    return existing[0].id;
+  }
+  const [created] = await connection.query(`INSERT INTO ${table} (name) VALUES (?)`, [cleanName]);
   return created.insertId;
 }
 
