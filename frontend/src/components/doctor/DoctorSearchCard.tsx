@@ -51,7 +51,7 @@ export function DoctorSearchCard({ doctor }: DoctorSearchCardProps) {
       <div className="doctor-card-footer">
         <button 
           className="btn-primary full-width"
-          onClick={() => navigate(`/doctor/profile/${doctor.doctorId}`)}
+          onClick={() => navigate(`/patient/doctor/${doctor.doctorId}`)}
         >
           View Profile
         </button>
