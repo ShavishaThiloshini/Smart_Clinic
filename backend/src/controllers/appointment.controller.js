@@ -167,4 +167,28 @@ async function createAppointment(req, res, next) {
   }
 }
 
-module.exports = { createAppointment, getAppointments, isValidDate, addMinutes };
+async function getAppointmentHistory(req, res, next) {
+  try {
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({ success: false, message: 'Access denied. Only patients can view their appointment history.' });
+    }
+
+    const patientId = await getPatientId(req.user.userId);
+    if (!patientId) {
+      return res.status(404).json({ success: false, message: 'Patient profile not found.' });
+    }
+
+    const filter = ` WHERE a.patient_id = ? AND (a.status IN ('completed', 'cancelled', 'no-show') OR a.appointment_date < CURDATE())`;
+    const [rows] = await pool.query(`${APPOINTMENT_SELECT}${filter} ORDER BY a.appointment_date DESC, a.start_time DESC`, [patientId]);
+
+    if (!rows || rows.length === 0) {
+      return res.status(200).json({ success: true, message: 'No appointment history found.', appointments: [] });
+    }
+
+    return res.status(200).json({ success: true, appointments: rows.map(mapAppointment) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { createAppointment, getAppointments, getAppointmentHistory, isValidDate, addMinutes };
