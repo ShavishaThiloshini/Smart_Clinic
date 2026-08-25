@@ -6,7 +6,7 @@ import logo from '../../assets/images/logo.png';
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
   { label: 'Find a doctor', icon: '⌕', path: '/patient/search' },
-  { label: 'My appointments', icon: '▣', path: '#' },
+  { label: 'My appointments', icon: '▣', path: '/patient/appointments' },
   { label: 'Medical records', icon: '▤', path: '#' },
   { label: 'Prescriptions', icon: '▱', path: '#' },
   { label: 'Notifications', icon: '◌', path: '#' }
