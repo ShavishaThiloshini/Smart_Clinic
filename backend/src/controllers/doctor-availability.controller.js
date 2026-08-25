@@ -106,6 +106,33 @@ async function getDoctorIdByUserId(userId) {
   return rows.length ? rows[0].doctor_id : null;
 }
 
+async function approveReadyDoctor(connection, doctorId) {
+  const [[profile]] = await connection.query(
+    `SELECT d.specialization_id AS specializationId, d.clinic_id AS clinicId,
+      d.qualifications, d.experience, d.consultation_fee AS consultationFee,
+      d.bio, u.name
+     FROM doctors d
+     JOIN users u ON u.user_id = d.user_id
+     WHERE d.doctor_id = ?`,
+    [doctorId]
+  );
+  const [[activeSlots]] = await connection.query(
+    'SELECT COUNT(*) AS count FROM doctor_availability WHERE doctor_id = ? AND status = TRUE',
+    [doctorId]
+  );
+  const profileReady = profile && profile.name?.trim() && profile.specializationId && profile.clinicId
+    && profile.qualifications?.trim() && profile.experience !== null
+    && profile.consultationFee !== null && profile.bio?.trim();
+
+  if (profileReady && Number(activeSlots.count) > 0) {
+    await connection.query(
+      `UPDATE doctors SET approval_status = 'approved'
+       WHERE doctor_id = ? AND approval_status = 'pending'`,
+      [doctorId]
+    );
+  }
+}
+
 async function fetchAvailabilityByDoctorId(doctorId, activeOnly = false) {
   const statusFilter = activeOnly ? ' AND status = TRUE' : '';
   const [rows] = await pool.query(
@@ -190,6 +217,8 @@ async function setAvailability(req, res, next) {
           [values]
         );
       }
+
+      await approveReadyDoctor(connection, doctorId);
 
       await connection.commit();
       const saved = await fetchAvailabilityByDoctorId(doctorId);
