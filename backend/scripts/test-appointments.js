@@ -75,9 +75,16 @@ async function run() {
     assert('Booking starts with pending status', booking.json?.appointment?.status === 'pending', JSON.stringify(booking.json));
     appointmentId = booking.json?.appointment?.appointmentId;
 
+    const rescheduled = await request('PUT', `/api/appointments/${appointmentId}/reschedule`, {
+      token: patientToken,
+      body: { appointmentDate: '2099-01-05', startTime: '10:00' }
+    });
+    assert('Reschedule to an available slot -> 200', rescheduled.status === 200, rescheduled.json?.message);
+    assert('Reschedule updates date and time', rescheduled.json?.appointment?.startTime === '10:00' && rescheduled.json?.appointment?.endTime === '10:30', JSON.stringify(rescheduled.json));
+
     const duplicate = await request('POST', '/api/appointments', {
       token: patientToken,
-      body: { doctorId, appointmentDate: '2099-01-05', startTime: '09:00' }
+      body: { doctorId, appointmentDate: '2099-01-05', startTime: '10:00' }
     });
     assert('Duplicate slot -> 409', duplicate.status === 409, duplicate.json?.message);
 
@@ -86,6 +93,18 @@ async function run() {
       body: { doctorId, appointmentDate: '2099-01-05', startTime: '13:00' }
     });
     assert('Outside availability -> 409', unavailable.status === 409, unavailable.json?.message);
+
+    const cancelled = await request('PATCH', `/api/appointments/${appointmentId}/cancel`, { token: patientToken });
+    assert('Cancel a pending appointment -> 200', cancelled.status === 200, cancelled.json?.message);
+
+    const cancelAgain = await request('PATCH', `/api/appointments/${appointmentId}/cancel`, { token: patientToken });
+    assert('Cancel an already cancelled appointment -> 409', cancelAgain.status === 409, cancelAgain.json?.message);
+
+    const rescheduleCancelled = await request('PUT', `/api/appointments/${appointmentId}/reschedule`, {
+      token: patientToken,
+      body: { appointmentDate: '2099-01-05', startTime: '11:00' }
+    });
+    assert('Reschedule a cancelled appointment -> 409', rescheduleCancelled.status === 409, rescheduleCancelled.json?.message);
   }
 
   const appointments = await request('GET', '/api/appointments', { token: patientToken });

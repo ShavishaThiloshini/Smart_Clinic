@@ -28,6 +28,43 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function isFutureAppointment(appointmentDate, startTime) {
+  return new Date(`${appointmentDate}T${startTime}:00Z`).getTime() > Date.now();
+}
+
+function validateAppointmentId(appointmentId) {
+  return /^\d+$/.test(String(appointmentId)) && Number(appointmentId) > 0;
+}
+
+async function getAppointmentForPatient(connection, appointmentId, patientId) {
+  const [rows] = await connection.query(
+    `SELECT appointment_id AS appointmentId, doctor_id AS doctorId,
+        DATE_FORMAT(appointment_date, '%Y-%m-%d') AS appointmentDate,
+        start_time AS startTime, status
+     FROM appointments
+     WHERE appointment_id = ? AND patient_id = ?
+     FOR UPDATE`,
+    [appointmentId, patientId]
+  );
+  return rows[0] || null;
+}
+
+async function getAvailableSlot(connection, doctorId, appointmentDate, startTime) {
+  const date = new Date(`${appointmentDate}T00:00:00Z`);
+  const dayOfWeek = DAY_NAMES[date.getUTCDay()];
+  const [availabilityRows] = await connection.query(
+    `SELECT start_time AS startTime, end_time AS endTime, slot_duration AS slotDuration
+     FROM doctor_availability
+     WHERE doctor_id = ? AND day_of_week = ? AND status = TRUE`,
+    [doctorId, dayOfWeek]
+  );
+
+  return availabilityRows.find((slot) => {
+    const endTime = addMinutes(startTime, Number(slot.slotDuration));
+    return endTime && startTime >= formatTime(slot.startTime) && endTime <= formatTime(slot.endTime);
+  });
+}
+
 function mapAppointment(row) {
   return {
     appointmentId: row.appointmentId,
@@ -191,4 +228,128 @@ async function getAppointmentHistory(req, res, next) {
   }
 }
 
-module.exports = { createAppointment, getAppointments, getAppointmentHistory, isValidDate, addMinutes };
+async function cancelAppointment(req, res, next) {
+  const { appointmentId } = req.params;
+  if (!validateAppointmentId(appointmentId)) {
+    return res.status(422).json({ success: false, message: 'appointmentId must be a positive integer.' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    const patientId = await getPatientId(req.user.userId, connection);
+    if (!patientId) return res.status(404).json({ success: false, message: 'Patient profile not found.' });
+
+    await connection.beginTransaction();
+    const appointment = await getAppointmentForPatient(connection, appointmentId, patientId);
+    if (!appointment) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+    }
+    if (!['pending', 'confirmed'].includes(appointment.status)) {
+      await connection.rollback();
+      return res.status(409).json({ success: false, message: 'Only pending or confirmed appointments can be cancelled.' });
+    }
+    if (!isFutureAppointment(appointment.appointmentDate, formatTime(appointment.startTime))) {
+      await connection.rollback();
+      return res.status(409).json({ success: false, message: 'Appointments can only be cancelled before they start.' });
+    }
+
+    await connection.query(
+      `UPDATE appointments SET status = 'cancelled', queue_number = NULL
+       WHERE appointment_id = ?`,
+      [appointmentId]
+    );
+    await connection.commit();
+    return res.json({ success: true, message: 'Appointment cancelled successfully.' });
+  } catch (error) {
+    await connection.rollback();
+    next(error);
+  } finally {
+    connection.release();
+  }
+}
+
+async function rescheduleAppointment(req, res, next) {
+  const { appointmentId } = req.params;
+  const { appointmentDate, startTime } = req.body || {};
+
+  if (!validateAppointmentId(appointmentId)) {
+    return res.status(422).json({ success: false, message: 'appointmentId must be a positive integer.' });
+  }
+  if (typeof startTime !== 'string' || !TIME_PATTERN.test(startTime)) {
+    return res.status(422).json({ success: false, message: 'startTime must use HH:mm format.' });
+  }
+  if (!isValidDate(appointmentDate) || !isFutureAppointment(appointmentDate, startTime)) {
+    return res.status(422).json({ success: false, message: 'appointmentDate must be today or a future date and the appointment must be in the future.' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    const patientId = await getPatientId(req.user.userId, connection);
+    if (!patientId) return res.status(404).json({ success: false, message: 'Patient profile not found.' });
+
+    await connection.beginTransaction();
+    const appointment = await getAppointmentForPatient(connection, appointmentId, patientId);
+    if (!appointment) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+    }
+    if (!['pending', 'confirmed'].includes(appointment.status)) {
+      await connection.rollback();
+      return res.status(409).json({ success: false, message: 'Only pending or confirmed appointments can be rescheduled.' });
+    }
+    if (!isFutureAppointment(appointment.appointmentDate, formatTime(appointment.startTime))) {
+      await connection.rollback();
+      return res.status(409).json({ success: false, message: 'Appointments can only be rescheduled before they start.' });
+    }
+
+    const matchingSlot = await getAvailableSlot(connection, appointment.doctorId, appointmentDate, startTime);
+    if (!matchingSlot) {
+      await connection.rollback();
+      return res.status(409).json({ success: false, message: 'The selected time is not available for this doctor.' });
+    }
+
+    const endTime = addMinutes(startTime, Number(matchingSlot.slotDuration));
+    const [conflicts] = await connection.query(
+      `SELECT appointment_id FROM appointments
+       WHERE doctor_id = ? AND appointment_date = ? AND start_time = ?
+         AND status IN ('pending', 'confirmed') AND appointment_id <> ?
+       FOR UPDATE`,
+      [appointment.doctorId, appointmentDate, startTime, appointmentId]
+    );
+    if (conflicts.length) {
+      await connection.rollback();
+      return res.status(409).json({ success: false, message: 'The selected appointment slot is already booked.' });
+    }
+
+    await connection.query(
+      `UPDATE appointments SET appointment_date = ?, start_time = ?, end_time = ?, status = 'pending'
+       WHERE appointment_id = ?`,
+      [appointmentDate, startTime, endTime, appointmentId]
+    );
+    await connection.commit();
+
+    const [rows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [appointmentId]);
+    return res.json({ success: true, message: 'Appointment rescheduled successfully.', appointment: mapAppointment(rows[0]) });
+  } catch (error) {
+    await connection.rollback();
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ success: false, message: 'The selected appointment slot is already booked.' });
+    }
+    next(error);
+  } finally {
+    connection.release();
+  }
+}
+
+module.exports = {
+  createAppointment,
+  getAppointments,
+  getAppointmentHistory,
+  cancelAppointment,
+  rescheduleAppointment,
+  isValidDate,
+  addMinutes,
+  isFutureAppointment,
+  validateAppointmentId
+};
