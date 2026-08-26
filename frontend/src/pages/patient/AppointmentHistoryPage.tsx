@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import { cancelAppointment, getAppointments, getDoctorAvailability, rescheduleAppointment } from '../../services/appointment.service';
+import type { Appointment, AvailabilitySlot } from '../../types/appointment.types';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -11,19 +13,11 @@ const navigation = [
   { label: 'Notifications', icon: '◌', path: '#' },
 ];
 
-type Appointment = {
-  appointmentId: number;
-  appointmentDate: string;
-  startTime: string;
-  endTime: string;
-  queueNumber: number;
-  status: string;
-  reason: string | null;
-  doctorName: string;
-  clinicName: string | null;
-};
-
 type ViewFilter = 'all' | 'upcoming' | 'past';
+
+type ActionState = { type: 'cancel' | 'reschedule'; appointment: Appointment } | null;
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function formatTime(time: string): string {
   const [hours, minutes] = time.split(':').map(Number);
@@ -45,6 +39,14 @@ function statusClass(status: string): string {
   return `history-status history-status-${status.toLowerCase().replace(/\s+/g, '-')}`;
 }
 
+function toMinutes(time: string): number { const [hours, minutes] = time.split(':').map(Number); return hours * 60 + minutes; }
+function fromMinutes(total: number): string { return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`; }
+function generateSlots(start: string, end: string, duration: number): string[] {
+  const slots: string[] = [];
+  for (let current = toMinutes(start); current + duration <= toMinutes(end); current += duration) slots.push(fromMinutes(current));
+  return slots;
+}
+
 export function AppointmentHistoryPage() {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -52,6 +54,13 @@ export function AppointmentHistoryPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [action, setAction] = useState<ActionState>(null);
+  const [actionError, setActionError] = useState('');
+  const [actionSuccess, setActionSuccess] = useState('');
+  const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   const patientName = useMemo(() => {
     try {
@@ -62,16 +71,32 @@ export function AppointmentHistoryPage() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('sc_token') || '';
-    fetch('/api/appointments', { headers: { Authorization: `Bearer ${token}` } })
-      .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Unable to load appointments.');
-        setAppointments(data.appointments || []);
-      })
+    getAppointments()
+      .then(setAppointments)
       .catch((requestError: Error) => setError(requestError.message))
       .finally(() => setLoading(false));
   }, []);
+
+  async function openReschedule(appointment: Appointment) {
+    setActionError(''); setActionSuccess(''); setSelectedDate(appointment.appointmentDate); setSelectedTime(appointment.startTime);
+    setAction({ type: 'reschedule', appointment });
+    try { setAvailability(await getDoctorAvailability(appointment.doctorId)); }
+    catch (requestError) { setActionError((requestError as Error).message); }
+  }
+
+  async function submitAction() {
+    if (!action || actionLoading) return;
+    setActionLoading(true); setActionError('');
+    try {
+      const updated = action.type === 'cancel'
+        ? await cancelAppointment(action.appointment.appointmentId)
+        : await rescheduleAppointment(action.appointment.appointmentId, selectedDate, selectedTime);
+      setAppointments((current) => current.map((item) => item.appointmentId === updated.appointmentId ? updated : item));
+      setActionSuccess(action.type === 'cancel' ? 'Appointment cancelled successfully.' : 'Appointment rescheduled successfully.');
+      setAction(null);
+    } catch (requestError) { setActionError((requestError as Error).message); }
+    finally { setActionLoading(false); }
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   const filteredAppointments = appointments.filter((appointment) => {
@@ -182,15 +207,38 @@ export function AppointmentHistoryPage() {
                         <div className="history-appointment-heading"><div><h2>Dr. {appointment.doctorName}</h2><p>{appointment.clinicName || 'Smart Clinic'}</p></div><span className={statusClass(appointment.status)}>{appointment.status}</span></div>
                         <div className="history-meta"><span>📅 {date.full}</span><span>⏰ {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}</span><span>Queue #{appointment.queueNumber}</span></div>
                         {appointment.reason && <p className="history-reason">Reason: {appointment.reason}</p>}
+                        {(appointment.status.toLowerCase() === 'pending' || appointment.status.toLowerCase() === 'confirmed') && appointment.appointmentDate >= today && (
+                          <div className="history-actions">
+                            <button type="button" className="history-action secondary" onClick={() => openReschedule(appointment)}>Reschedule</button>
+                            <button type="button" className="history-action danger" onClick={() => { setActionError(''); setActionSuccess(''); setAction({ type: 'cancel', appointment }); }}>Cancel appointment</button>
+                          </div>
+                        )}
                       </div>
                     </article>
                   );
                 })}
               </div>
             )}
+            {actionSuccess && <div className="history-feedback success" role="status">{actionSuccess}</div>}
           </section>
         </div>
       </section>
+      {action && (
+        <div className="appointment-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && !actionLoading && setAction(null)}>
+          <section className="appointment-modal" role="dialog" aria-modal="true" aria-labelledby="appointment-action-title">
+            <h2 id="appointment-action-title">{action.type === 'cancel' ? 'Cancel appointment?' : 'Reschedule appointment'}</h2>
+            <p className="appointment-modal-summary">Dr. {action.appointment.doctorName}<br />{formatDate(action.appointment.appointmentDate).full} at {formatTime(action.appointment.startTime)}</p>
+            {action.type === 'cancel' ? <p>This appointment will be marked as cancelled and will no longer be available for your visit.</p> : (
+              <div className="reschedule-fields">
+                <label>Date<input type="date" min={today} value={selectedDate} onChange={(event) => { setSelectedDate(event.target.value); setSelectedTime(''); }} /></label>
+                <label>Available time<select value={selectedTime} onChange={(event) => setSelectedTime(event.target.value)}><option value="">Select a time</option>{[...new Set(availability.filter((slot) => slot.dayOfWeek === DAY_NAMES[new Date(`${selectedDate}T00:00:00`).getDay()]).flatMap((slot) => generateSlots(slot.startTime, slot.endTime, slot.slotDuration)))].sort().map((time) => <option key={time} value={time}>{formatTime(time)}</option>)}</select></label>
+              </div>
+            )}
+            {actionError && <p className="appointment-modal-error" role="alert">{actionError}</p>}
+            <div className="appointment-modal-actions"><button type="button" className="history-action secondary" disabled={actionLoading} onClick={() => setAction(null)}>Keep appointment</button><button type="button" className={`history-action ${action.type === 'cancel' ? 'danger' : 'primary'}`} disabled={actionLoading || (action.type === 'reschedule' && (!selectedDate || !selectedTime))} onClick={submitAction}>{actionLoading ? 'Processing...' : action.type === 'cancel' ? 'Yes, cancel' : 'Confirm reschedule'}</button></div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
