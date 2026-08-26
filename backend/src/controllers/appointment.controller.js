@@ -260,7 +260,8 @@ async function cancelAppointment(req, res, next) {
       [appointmentId]
     );
     await connection.commit();
-    return res.json({ success: true, message: 'Appointment cancelled successfully.' });
+    const [rows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [appointmentId]);
+    return res.json({ success: true, message: 'Appointment cancelled successfully.', appointment: mapAppointment(rows[0]) });
   } catch (error) {
     await connection.rollback();
     next(error);

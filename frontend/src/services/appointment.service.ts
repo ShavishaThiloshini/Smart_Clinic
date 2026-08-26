@@ -31,7 +31,7 @@ export async function getDoctorAvailability(doctorId: number): Promise<Availabil
 
 export async function rescheduleAppointment(appointmentId: number, appointmentDate: string, startTime: string): Promise<Appointment> {
 	const data = await request<{ appointment: Appointment }>(`/api/appointments/${appointmentId}/reschedule`, {
-		method: 'PATCH',
+		method: 'PUT',
 		body: JSON.stringify({ appointmentDate, startTime }),
 	});
 	return data.appointment;
