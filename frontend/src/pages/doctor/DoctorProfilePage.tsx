@@ -14,6 +14,8 @@ type DoctorProfile = {
   approvalStatus?: string;
 };
 
+const specializations = ['Cardiologist', 'Dermatologist', 'Neurologist', 'Pediatrician', 'General Practitioner'];
+
 const emptyProfile: DoctorProfile = {
   name: '', email: '', specialization: '', clinic: '', qualifications: '',
   experience: '', consultationFee: '', bio: ''
@@ -138,7 +140,10 @@ export function DoctorProfilePage() {
               <label>Email address<input value={profile.email} readOnly aria-readonly="true" /></label>
             </div></section>
             <section className="doctor-form-section"><h2>Practice information</h2><div className="doctor-form-grid">
-              <label>Specialization<input value={profile.specialization} onChange={(event) => update('specialization', event.target.value)} placeholder="e.g. Cardiology" /></label>
+              <label>Specialization<select value={profile.specialization} onChange={(event) => update('specialization', event.target.value)}>
+                <option value="">All Specializations</option>
+                {specializations.map((item) => <option key={item} value={item}>{item}</option>)}
+              </select></label>
               <label>Clinic<input value={profile.clinic} onChange={(event) => update('clinic', event.target.value)} placeholder="e.g. Smart Clinic Colombo" /></label>
               <label>Years of experience<input type="number" min="0" max="80" value={profile.experience} onChange={(event) => update('experience', event.target.value)} placeholder="e.g. 8" /></label>
               <label>Consultation fee (LKR)<input type="number" min="0" step="0.01" value={profile.consultationFee} onChange={(event) => update('consultationFee', event.target.value)} placeholder="e.g. 3500" /></label>
