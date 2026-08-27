@@ -343,12 +343,128 @@ async function rescheduleAppointment(req, res, next) {
   }
 }
 
+async function getQueueStatus(req, res, next) {
+  const { appointmentId } = req.params;
+  if (!validateAppointmentId(appointmentId)) {
+    return res.status(422).json({ success: false, message: 'appointmentId must be a positive integer.' });
+  }
+
+  try {
+    const [rows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [appointmentId]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+    }
+    const appointment = mapAppointment(rows[0]);
+
+    if (req.user.role === 'patient') {
+      const patientId = await getPatientId(req.user.userId);
+      if (appointment.patientId !== patientId) {
+        return res.status(403).json({ success: false, message: 'Access denied.' });
+      }
+    } else if (req.user.role === 'doctor') {
+      const [doctorRows] = await pool.query('SELECT doctor_id AS doctorId FROM doctors WHERE user_id = ?', [req.user.userId]);
+      if (!doctorRows.length || appointment.doctorId !== doctorRows[0].doctorId) {
+        return res.status(403).json({ success: false, message: 'Access denied.' });
+      }
+    }
+
+    if (appointment.status !== 'pending' && appointment.status !== 'confirmed') {
+      return res.status(200).json({ success: true, queueStatus: { position: 0, status: appointment.status, queueNumber: appointment.queueNumber } });
+    }
+
+    const [queueRows] = await pool.query(
+      `SELECT COUNT(*) AS patientsAhead
+       FROM appointments
+       WHERE doctor_id = ? AND appointment_date = ? AND status IN ('pending', 'confirmed') AND queue_number < ?`,
+      [appointment.doctorId, rows[0].appointmentDate, appointment.queueNumber]
+    );
+
+    return res.status(200).json({
+      success: true,
+      queueStatus: {
+        position: queueRows[0].patientsAhead,
+        status: appointment.status,
+        queueNumber: appointment.queueNumber
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateAppointmentStatus(req, res, next) {
+  const { appointmentId } = req.params;
+  const { status } = req.body || {};
+
+  if (!validateAppointmentId(appointmentId)) {
+    return res.status(422).json({ success: false, message: 'appointmentId must be a positive integer.' });
+  }
+
+  const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled', 'no-show'];
+  if (!validStatuses.includes(status)) {
+    return res.status(422).json({ success: false, message: 'Invalid status.' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    if (req.user.role === 'doctor') {
+      const [doctorRows] = await connection.query('SELECT doctor_id AS doctorId FROM doctors WHERE user_id = ?', [req.user.userId]);
+      if (!doctorRows.length) {
+        connection.release();
+        return res.status(403).json({ success: false, message: 'Doctor profile not found.' });
+      }
+      const [apptRows] = await connection.query('SELECT doctor_id AS doctorId FROM appointments WHERE appointment_id = ?', [appointmentId]);
+      if (!apptRows.length) {
+        connection.release();
+        return res.status(404).json({ success: false, message: 'Appointment not found.' });
+      }
+      if (apptRows[0].doctorId !== doctorRows[0].doctorId) {
+        connection.release();
+        return res.status(403).json({ success: false, message: 'Access denied. You can only update your own appointments.' });
+      }
+    } else if (req.user.role === 'patient') {
+      connection.release();
+      return res.status(403).json({ success: false, message: 'Access denied. Only doctors and admins can update appointment status.' });
+    }
+
+    await connection.beginTransaction();
+    const [existing] = await connection.query('SELECT status FROM appointments WHERE appointment_id = ? FOR UPDATE', [appointmentId]);
+    if (!existing.length) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+    }
+
+    let query = 'UPDATE appointments SET status = ?';
+    let queryParams = [status];
+    if (status === 'cancelled' || status === 'no-show') {
+      query += ', queue_number = NULL';
+    }
+    query += ' WHERE appointment_id = ?';
+    queryParams.push(appointmentId);
+
+    await connection.query(query, queryParams);
+    await connection.commit();
+
+    const [updatedRows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [appointmentId]);
+    return res.json({ success: true, message: 'Appointment status updated successfully.', appointment: mapAppointment(updatedRows[0]) });
+
+  } catch (error) {
+    await connection.rollback();
+    next(error);
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   createAppointment,
   getAppointments,
   getAppointmentHistory,
   cancelAppointment,
   rescheduleAppointment,
+  getQueueStatus,
+  updateAppointmentStatus,
   isValidDate,
   addMinutes,
   isFutureAppointment,
