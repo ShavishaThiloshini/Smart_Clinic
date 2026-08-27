@@ -39,6 +39,17 @@ function statusClass(status: string): string {
   return `history-status history-status-${status.toLowerCase().replace(/\s+/g, '-')}`;
 }
 
+function queueStatusMessage(status: string): string {
+  const messages: Record<string, string> = {
+    pending: 'Your booking is waiting for clinic confirmation.',
+    confirmed: 'Your visit is confirmed. Please arrive before your scheduled time.',
+    completed: 'This visit has been completed.',
+    cancelled: 'This appointment has been cancelled.',
+    'no-show': 'This appointment was marked as no-show.',
+  };
+  return messages[status.toLowerCase()] || 'Appointment status updated.';
+}
+
 function toMinutes(time: string): number { const [hours, minutes] = time.split(':').map(Number); return hours * 60 + minutes; }
 function fromMinutes(total: number): string { return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`; }
 function generateSlots(start: string, end: string, duration: number): string[] {
@@ -112,6 +123,11 @@ export function AppointmentHistoryPage() {
     past: appointments.filter((appointment) => appointment.appointmentDate < today || appointment.status.toLowerCase() === 'cancelled').length,
   }), [appointments, today]);
 
+  const activeQueueAppointments = appointments.filter((appointment) => (
+    appointment.appointmentDate >= today
+    && ['pending', 'confirmed'].includes(appointment.status.toLowerCase())
+  ));
+
   function logout() {
     localStorage.removeItem('sc_token');
     localStorage.removeItem('sc_user');
@@ -161,6 +177,29 @@ export function AppointmentHistoryPage() {
             <div><span className="history-summary-icon blue">▣</span><div><strong>{counts.all}</strong><span>Total appointments</span></div></div>
             <div><span className="history-summary-icon green">◷</span><div><strong>{counts.upcoming}</strong><span>Upcoming visits</span></div></div>
             <div><span className="history-summary-icon gray">✓</span><div><strong>{counts.past}</strong><span>Past visits</span></div></div>
+          </section>
+
+          <section className="queue-status-panel" aria-labelledby="queue-status-title">
+            <div className="queue-status-heading">
+              <div><p className="patient-eyebrow">QUEUE MANAGEMENT</p><h2 id="queue-status-title">Queue &amp; appointment status</h2></div>
+              <span className="queue-status-live"><i /> Current status</span>
+            </div>
+            {activeQueueAppointments.length === 0 ? (
+              <p className="queue-status-empty">You have no pending or confirmed appointments in the queue.</p>
+            ) : (
+              <div className="queue-status-list">
+                {activeQueueAppointments.map((appointment) => {
+                  const date = formatDate(appointment.appointmentDate);
+                  return (
+                    <article className="queue-status-item" key={appointment.appointmentId}>
+                      <div className="queue-number"><span>QUEUE</span><strong>{appointment.queueNumber ? `#${appointment.queueNumber}` : '—'}</strong></div>
+                      <div className="queue-status-main"><h3>Dr. {appointment.doctorName}</h3><p>{date.full} · {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}</p><span>{queueStatusMessage(appointment.status)}</span></div>
+                      <span className={statusClass(appointment.status)}>{appointment.status}</span>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           <section className="history-section" aria-label="Appointments">
