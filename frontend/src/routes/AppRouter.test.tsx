@@ -1,9 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRouter } from './AppRouter';
 
 describe('AppRouter', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
   it('renders the login page on the root redirect', () => {
     render(
       <MemoryRouter initialEntries={['/login']}>
@@ -45,5 +49,46 @@ describe('AppRouter', () => {
     );
 
     expect(screen.getByRole('heading', { name: /Good morning, Sample\./i })).toBeInTheDocument();
+  });
+
+  it('renders the medical records page for authenticated patients', async () => {
+    localStorage.setItem('sc_token', 'demo-token');
+    localStorage.setItem('sc_user', JSON.stringify({ name: 'Sample Patient', role: 'patient' }));
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            success: true,
+            profile: { patientId: 42 }
+          })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            success: true,
+            records: [
+              {
+                recordId: 1,
+                diagnosis: 'Routine follow-up',
+                notes: 'Feels well after treatment.',
+                treatment: 'Continue hydration and rest.',
+                createdAt: '2026-08-14T00:00:00.000Z',
+                doctorName: 'Dr. S. Perera'
+              }
+            ]
+          })
+        })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/patient/medical-records']}>
+        <AppRouter />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /Your medical records/i })).toBeInTheDocument();
   });
 });

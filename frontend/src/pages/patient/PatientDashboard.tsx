@@ -6,7 +6,7 @@ const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
   { label: 'Find a doctor', icon: '⌕', path: '/patient/search' },
   { label: 'My appointments', icon: '▣', path: '/patient/appointments' },
-  { label: 'Medical records', icon: '▤', path: '#' },
+  { label: 'Medical records', icon: '▤', path: '/patient/medical-records' },
   { label: 'Prescriptions', icon: '▱', path: '#' },
   { label: 'Notifications', icon: '◌', path: '#' }
 ];
@@ -99,7 +99,7 @@ export function PatientDashboard() {
 
           <section className="quick-access"><div className="section-title"><div><p className="section-kicker">QUICK ACCESS</p><h2>Manage your care</h2></div></div><div className="quick-grid">
             <button type="button" className="quick-card" onClick={() => navigate('/patient/appointments')}><span className="quick-icon blue">▣</span><strong>My appointments</strong><small>View upcoming and past visits</small><i>→</i></button>
-            <button type="button" className="quick-card"><span className="quick-icon teal">▤</span><strong>Medical records</strong><small>Review your consultation history</small><i>→</i></button>
+            <button type="button" className="quick-card" onClick={() => navigate('/patient/medical-records')}><span className="quick-icon teal">▤</span><strong>Medical records</strong><small>Review your consultation history</small><i>→</i></button>
             <button type="button" className="quick-card"><span className="quick-icon purple">▱</span><strong>Prescriptions</strong><small>See your prescribed medicines</small><i>→</i></button>
           </div></section>
 
