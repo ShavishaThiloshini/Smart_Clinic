@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import { MedicalHistoryTable } from '../../components/medical/MedicalHistoryTable';
+import { MedicalRecordCard } from '../../components/medical/MedicalRecordCard';
+import { useMedicalRecords } from '../../hooks/useMedicalRecords';
+import type { MedicalRecord } from '../../types/medical.types';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -11,41 +15,17 @@ const navigation = [
   { label: 'Notifications', icon: '◌', path: '#' }
 ];
 
-type MedicalRecord = {
-  recordId: number;
-  patientId: number;
-  doctorId: number;
-  appointmentId: number | null;
-  diagnosis: string | null;
-  notes: string | null;
-  treatment: string | null;
-  createdAt: string;
-  updatedAt: string;
-  patientName: string;
-  doctorName: string;
-};
-
 const API_BASE_URL =
   typeof window !== 'undefined' && window.location?.origin
     ? window.location.origin
     : 'http://localhost:3000';
 
-function formatRecordDate(value: string | null | undefined): string {
-  if (!value) return 'Unknown date';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-}
-
 export function MedicalRecordsPage() {
   const navigate = useNavigate();
-  const [records, setRecords] = useState<MedicalRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { records, loading, error, fetchPatientRecords, clearError } = useMedicalRecords();
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const patientName = useMemo(() => {
     try {
@@ -58,7 +38,7 @@ export function MedicalRecordsPage() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadRecords() {
+    async function loadPatientRecords() {
       try {
         const token = localStorage.getItem('sc_token');
 
@@ -79,35 +59,22 @@ export function MedicalRecordsPage() {
         }
 
         const patientId = profileJson.profile.patientId;
-        const recordsRes = await fetch(`${API_BASE_URL}/api/medical-records/patient/${patientId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        const recordsJson = await recordsRes.json();
-
-        if (!recordsRes.ok || !recordsJson?.success) {
-          throw new Error(recordsJson?.message || 'Unable to load medical records.');
-        }
-
+        
         if (isMounted) {
-          setRecords(recordsJson.records || []);
+          setProfileLoading(false);
+          await fetchPatientRecords(patientId);
         }
       } catch (requestError) {
         console.error('Failed to load medical records', requestError);
 
         if (isMounted) {
-          setError(requestError instanceof Error ? requestError.message : 'Unable to load medical records.');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
+          setProfileError(requestError instanceof Error ? requestError.message : 'Unable to load your profile.');
+          setProfileLoading(false);
         }
       }
     }
 
-    loadRecords();
+    loadPatientRecords();
 
     return () => {
       isMounted = false;
@@ -178,15 +145,15 @@ export function MedicalRecordsPage() {
             <div>
               <span className="history-summary-icon green">✓</span>
               <div>
-                <strong>{records.length ? records.length : 0}</strong>
+                <strong>{records.length}</strong>
                 <span>Completed visits</span>
               </div>
             </div>
             <div>
               <span className="history-summary-icon gray">◷</span>
               <div>
-                <strong>{records.length ? '1' : '0'}</strong>
-                <span>Latest follow-up</span>
+                <strong>{records.length > 0 ? records[0]?.createdAt?.split('T')[0] : 'None'}</strong>
+                <span>Latest visit</span>
               </div>
             </div>
           </section>
@@ -195,69 +162,138 @@ export function MedicalRecordsPage() {
             <div className="section-title">
               <div>
                 <p className="section-kicker">CONSULTATION HISTORY</p>
-                <h2>Latest treatment notes</h2>
+                <h2>Your medical records</h2>
               </div>
+              {error && !profileError && (
+                <button
+                  type="button"
+                  className="retry-button"
+                  onClick={() => {
+                    clearError();
+                    window.location.reload();
+                  }}
+                  aria-label="Retry loading records"
+                >
+                  ↻ Retry
+                </button>
+              )}
             </div>
 
-            {loading ? (
-              <div className="records-stack">
-                <div className="record-card">
-                  <div className="record-body">
-                    <p>Loading your records...</p>
-                  </div>
-                </div>
+            {profileError && (
+              <div className="error-container">
+                <p className="error-message">⚠️ {profileError}</p>
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={() => navigate('/login')}
+                >
+                  Return to Login
+                </button>
               </div>
-            ) : error ? (
-              <div className="records-stack">
-                <div className="record-card">
-                  <div className="record-body">
-                    <p className="alert-error">{error}</p>
-                  </div>
-                </div>
-              </div>
-            ) : records.length === 0 ? (
-              <div className="records-stack">
-                <div className="record-card">
-                  <div className="record-body">
-                    <p>No medical records are available yet for this account.</p>
-                  </div>
-                </div>
+            )}
+
+            {profileLoading ? (
+              <div className="loading-container">
+                <div className="spinner" />
+                <p>Loading your medical records...</p>
               </div>
             ) : (
-              <div className="records-stack">
-                {records.map((record) => (
-                  <article className="record-card" key={record.recordId}>
-                    <div className="record-header">
-                      <div>
-                        <p className="record-meta">{formatRecordDate(record.createdAt)}</p>
-                        <h3>{record.doctorName}</h3>
-                      </div>
-                      <span className="record-badge">Consultation</span>
-                    </div>
-
-                    <div className="record-body">
-                      <div className="record-block">
-                        <span className="record-label">Diagnosis</span>
-                        <p>{record.diagnosis || 'No diagnosis recorded.'}</p>
-                      </div>
-
-                      <div className="record-block">
-                        <span className="record-label">Notes</span>
-                        <p>{record.notes || 'No notes recorded for this visit.'}</p>
-                      </div>
-
-                      <div className="record-block follow-up">
-                        <span className="record-label">Treatment plan</span>
-                        <p>{record.treatment || 'No treatment plan recorded.'}</p>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+              <MedicalHistoryTable
+                records={records}
+                loading={loading}
+                error={error || undefined}
+                onRecordClick={setSelectedRecord}
+              />
             )}
           </section>
         </div>
       </section>
+
+      {selectedRecord && (
+        <MedicalRecordCard
+          record={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+        />
+      )}
+
+      <style jsx>{`
+        .error-container {
+          padding: 2rem;
+          background-color: #fff3cd;
+          border: 1px solid #ffc107;
+          border-radius: 8px;
+          text-align: center;
+          margin-top: 1rem;
+        }
+
+        .error-message {
+          margin: 0 0 1rem 0;
+          color: #856404;
+          font-size: 0.9375rem;
+        }
+
+        .primary-action {
+          background-color: #0066cc;
+          color: white;
+          border: none;
+          padding: 0.625rem 1.25rem;
+          border-radius: 4px;
+          font-size: 0.9375rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+        }
+
+        .primary-action:hover {
+          background-color: #0052a3;
+        }
+
+        .loading-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 3rem 2rem;
+          color: #666;
+        }
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #0066cc;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+          margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .section-title {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .retry-button {
+          background-color: #f5f5f5;
+          color: #333;
+          border: 1px solid #e0e0e0;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          font-size: 0.875rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .retry-button:hover {
+          background-color: #e0e0e0;
+        }
+      `}</style>
     </main>
   );
 }
