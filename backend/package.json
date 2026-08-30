@@ -18,6 +18,7 @@
     "test:availability": "node scripts/test-availability-validation.js",
     "test:availability-api": "node scripts/test-availability.js",
     "test:appointments": "node scripts/test-appointments.js",
+    "test:medical-record-security": "node scripts/test-medical-record-security.js",
     "test:milestone1": "node scripts/test-milestone1.js",
     "test:day10": "node scripts/test-milestone1.js"
   },
