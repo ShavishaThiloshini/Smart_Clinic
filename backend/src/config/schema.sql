@@ -84,13 +84,17 @@ CREATE TABLE IF NOT EXISTS prescriptions (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_prescriptions_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
   CONSTRAINT fk_prescriptions_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE,
-  CONSTRAINT fk_prescriptions_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id)
+  CONSTRAINT fk_prescriptions_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
+  INDEX idx_prescriptions_patient_created (patient_id, created_at),
+  INDEX idx_prescriptions_doctor_created (doctor_id, created_at),
+  INDEX idx_prescriptions_appointment (appointment_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS prescription_items (
   item_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, prescription_id INT UNSIGNED NOT NULL,
   medicine_name VARCHAR(255) NOT NULL, dosage VARCHAR(100), frequency VARCHAR(100), duration VARCHAR(100),
-  CONSTRAINT fk_items_prescription FOREIGN KEY (prescription_id) REFERENCES prescriptions(prescription_id) ON DELETE CASCADE
+  CONSTRAINT fk_items_prescription FOREIGN KEY (prescription_id) REFERENCES prescriptions(prescription_id) ON DELETE CASCADE,
+  INDEX idx_prescription_items_prescription (prescription_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS notifications (

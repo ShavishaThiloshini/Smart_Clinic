@@ -80,3 +80,17 @@ These public endpoints return only active doctors whose profiles have been appro
 
 The init script creates `smart_clinic` and applies `src/config/schema.sql` automatically.
 Ensure MySQL is listening on port 3306 before running `npm run db:init`.
+
+## Prescription database support
+
+For databases created before the prescription lookup indexes were added, run:
+
+```bash
+npm run db:migrate:prescriptions
+```
+
+The command is safe to run repeatedly. To check prescription request validation without a database connection, run:
+
+```bash
+npm run test:prescriptions
+```

@@ -93,6 +93,9 @@ function validateItems(items) {
   if (!Array.isArray(items) || items.length === 0) {
     return 'items must be a non-empty array of prescription items.';
   }
+  if (items.length > 50) {
+    return 'items cannot contain more than 50 prescription items.';
+  }
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     if (typeof item !== 'object' || item === null) {
@@ -102,10 +105,16 @@ function validateItems(items) {
     if (typeof name !== 'string' || name.trim().length === 0) {
       return 'items[' + i + '].medicineName is required and must be a non-empty string.';
     }
+    if (name.trim().length > 255) {
+      return 'items[' + i + '].medicineName must not exceed 255 characters.';
+    }
     const optionals = ['dosage', 'frequency', 'duration'];
     for (const f of optionals) {
       if (item[f] !== undefined && item[f] !== null && typeof item[f] !== 'string') {
         return 'items[' + i + '].' + f + ' must be a string or null.';
+      }
+      if (typeof item[f] === 'string' && item[f].trim().length > 100) {
+        return 'items[' + i + '].' + f + ' must not exceed 100 characters.';
       }
     }
   }
@@ -148,6 +157,9 @@ async function createPrescription(req, res, next) {
     return res.status(422).json({ success: false, message: 'notes must be a string.' });
   }
   const trimmedNotes = notes ? String(notes).trim() : null;
+  if (trimmedNotes && trimmedNotes.length > 5000) {
+    return res.status(422).json({ success: false, message: 'notes must not exceed 5000 characters.' });
+  }
 
   // Validate items
   const itemsError = validateItems(items);
@@ -174,7 +186,7 @@ async function createPrescription(req, res, next) {
     // If appointmentId provided, verify it belongs to this patient and doctor
     if (appointmentId) {
       const [apptRows] = await connection.query(
-        'SELECT patient_id AS pId, doctor_id AS dId FROM appointments WHERE appointment_id = ?',
+        'SELECT patient_id AS pId, doctor_id AS dId, status FROM appointments WHERE appointment_id = ?',
         [appointmentId]
       );
       if (!apptRows.length) {
@@ -184,6 +196,12 @@ async function createPrescription(req, res, next) {
         return res.status(403).json({
           success: false,
           message: 'Access denied. The appointment does not belong to this patient and doctor.'
+        });
+      }
+      if (apptRows[0].status !== 'completed') {
+        return res.status(422).json({
+          success: false,
+          message: 'A prescription can only be linked to a completed appointment.'
         });
       }
     }
@@ -385,5 +403,6 @@ module.exports = {
   createPrescription,
   getPatientPrescriptions,
   getPrescriptionById,
-  getPrescriptionsByAppointment
+  getPrescriptionsByAppointment,
+  validateItems
 };

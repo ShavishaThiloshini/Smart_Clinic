@@ -9,6 +9,7 @@
     "db:init": "node src/config/init-db.js",
     "db:seed": "node scripts/seed.js",
     "db:migrate:patient-profile": "node scripts/migrate-patient-profile.js",
+    "db:migrate:prescriptions": "node scripts/migrate-prescriptions.js",
     "test:auth": "node scripts/test-auth.js",
     "test:middleware": "node scripts/test-auth-middleware.js",
     "test:patient-profile": "node scripts/test-patient-profile-validation.js",
@@ -19,6 +20,7 @@
     "test:availability-api": "node scripts/test-availability.js",
     "test:appointments": "node scripts/test-appointments.js",
     "test:medical-record-security": "node scripts/test-medical-record-security.js",
+    "test:prescriptions": "node scripts/test-prescription-validation.js",
     "test:milestone1": "node scripts/test-milestone1.js",
     "test:day10": "node scripts/test-milestone1.js"
   },
