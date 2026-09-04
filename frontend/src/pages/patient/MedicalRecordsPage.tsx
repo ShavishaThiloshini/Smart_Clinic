@@ -226,7 +226,7 @@ export function MedicalRecordsPage() {
         />
       )}
 
-      <style jsx>{`
+      <style>{`
         .error-container {
           padding: 2rem;
           background-color: #fff3cd;

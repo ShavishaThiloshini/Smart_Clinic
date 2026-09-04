@@ -97,7 +97,7 @@ export function MedicalHistoryTable({ records, loading, error, onRecordClick }: 
         </table>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .medical-records-container {
           width: 100%;
           margin-top: 1.5rem;

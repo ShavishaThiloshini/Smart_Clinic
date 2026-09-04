@@ -179,7 +179,7 @@ export function MedicalRecordForm({
         </div>
       </fieldset>
 
-      <style jsx>{`
+      <style>{`
         .medical-record-form {
           max-width: 600px;
           margin: 0 auto;

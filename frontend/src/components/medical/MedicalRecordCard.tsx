@@ -113,7 +113,7 @@ export function MedicalRecordCard({ record, onClose }: MedicalRecordCardProps) {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .modal-overlay {
           position: fixed;
           top: 0;

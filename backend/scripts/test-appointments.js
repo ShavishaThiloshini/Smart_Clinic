@@ -55,8 +55,16 @@ async function run() {
       password: process.env.DB_PASSWORD || ''
     });
     await cleanup.query(
-      'DELETE FROM appointments WHERE doctor_id = ? AND appointment_date = ? AND start_time = ?',
-      [doctorId, '2099-01-05', '09:00']
+      `DELETE FROM notifications
+       WHERE appointment_id IN (
+         SELECT appointment_id FROM appointments
+         WHERE doctor_id = ? AND appointment_date = ?
+       )`,
+      [doctorId, '2099-01-05']
+    );
+    await cleanup.query(
+      'DELETE FROM appointments WHERE doctor_id = ? AND appointment_date = ?',
+      [doctorId, '2099-01-05']
     );
     await cleanup.end();
 
@@ -119,6 +127,7 @@ async function run() {
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || ''
     });
+    await connection.query('DELETE FROM notifications WHERE appointment_id = ?', [appointmentId]);
     await connection.query('DELETE FROM appointments WHERE appointment_id = ?', [appointmentId]);
     await connection.end();
   }

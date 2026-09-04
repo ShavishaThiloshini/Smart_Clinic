@@ -41,6 +41,10 @@ describe('AppRouter', () => {
   it('renders patient dashboard for authenticated patients', () => {
     localStorage.setItem('sc_token', 'demo-token');
     localStorage.setItem('sc_user', JSON.stringify({ name: 'Sample Patient', role: 'patient' }));
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, count: 0 })
+    }));
 
     render(
       <MemoryRouter initialEntries={['/patient/dashboard']}>
@@ -51,37 +55,33 @@ describe('AppRouter', () => {
     expect(screen.getByRole('heading', { name: /Good morning, Sample\./i })).toBeInTheDocument();
   });
 
-  it('renders the medical records page for authenticated patients', async () => {
+  it('renders the medical records page for authenticated patients', () => {
     localStorage.setItem('sc_token', 'demo-token');
     localStorage.setItem('sc_user', JSON.stringify({ name: 'Sample Patient', role: 'patient' }));
 
-    vi.stubGlobal(
-      'fetch',
-      vi.fn()
-        .mockResolvedValueOnce({
+    vi.stubGlobal('fetch', vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/patient/profile')) {
+        return Promise.resolve({ ok: true, json: async () => ({ success: true, profile: { patientId: 42 } }) });
+      }
+      if (url.includes('/api/medical-records/patient/42')) {
+        return Promise.resolve({
           ok: true,
           json: async () => ({
             success: true,
-            profile: { patientId: 42 }
+            records: [{
+              recordId: 1,
+              diagnosis: 'Routine follow-up',
+              notes: 'Feels well after treatment.',
+              treatment: 'Continue hydration and rest.',
+              createdAt: '2026-08-14T00:00:00.000Z',
+              doctorName: 'Dr. S. Perera'
+            }]
           })
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({
-            success: true,
-            records: [
-              {
-                recordId: 1,
-                diagnosis: 'Routine follow-up',
-                notes: 'Feels well after treatment.',
-                treatment: 'Continue hydration and rest.',
-                createdAt: '2026-08-14T00:00:00.000Z',
-                doctorName: 'Dr. S. Perera'
-              }
-            ]
-          })
-        })
-    );
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ success: true, count: 0 }) });
+    }));
 
     render(
       <MemoryRouter initialEntries={['/patient/medical-records']}>
@@ -89,6 +89,6 @@ describe('AppRouter', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole('heading', { name: /Your medical records/i, level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Your medical records/i, level: 1 })).toBeInTheDocument();
   });
 });

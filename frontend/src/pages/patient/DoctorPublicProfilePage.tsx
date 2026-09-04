@@ -7,8 +7,8 @@ const navigation = [
   { label: 'Find a doctor', icon: '⌕', path: '/patient/search' },
   { label: 'My appointments', icon: '▣', path: '/patient/appointments' },
   { label: 'Medical records', icon: '▤', path: '/patient/medical-records' },
-  { label: 'Prescriptions', icon: '▱', path: '#' },
-  { label: 'Notifications', icon: '◌', path: '#' },
+  { label: 'Prescriptions', icon: '▱', path: '/patient/prescriptions' },
+  { label: 'Notifications', icon: '◌', path: '/patient/notifications' },
 ];
 
 type DoctorProfile = {
