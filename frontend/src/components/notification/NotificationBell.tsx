@@ -1,0 +1,2 @@
+type NotificationBellProps = { unreadCount: number; onClick: () => void; active?: boolean };
+export function NotificationBell({ unreadCount, onClick, active = false }: NotificationBellProps) { return <button className={`notification-button ${active ? 'active' : ''}`} type="button" aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`} onClick={onClick}>♧{unreadCount > 0 && <span aria-hidden="true" />}</button>; }

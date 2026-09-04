@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 import { useNotifications } from '../../hooks/useNotifications';
+import { NotificationBell } from '../../components/notification/NotificationBell';
 import type { Notification } from '../../types/notification.types';
 
 const navigation = [
@@ -12,6 +13,8 @@ const navigation = [
   { label: 'Prescriptions', icon: '▱', path: '/patient/prescriptions' },
   { label: 'Reviews', icon: '★', path: '/patient/reviews' }
 ];
+
+navigation.push({ label: 'Notifications', icon: '◌', path: '/patient/notifications' });
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -35,7 +38,7 @@ function getIconForType(type: string) {
 
 export function NotificationsPage() {
   const navigate = useNavigate();
-  const { notifications, loading, error, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, loading, error, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
 
   const patientName = useMemo(() => {
     try {
