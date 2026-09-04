@@ -4,6 +4,7 @@ import { DoctorRoute } from './DoctorRoute';
 import { PatientRoute } from './PatientRoute';
 import { AvailabilityPage } from '../pages/doctor/AvailabilityPage';
 import { DoctorProfilePage } from '../pages/doctor/DoctorProfilePage';
+import { PrescriptionPage } from '../pages/doctor/PrescriptionPage';
 import { DoctorSearchPage } from '../pages/patient/DoctorSearchPage';
 import { DoctorPublicProfilePage } from '../pages/patient/DoctorPublicProfilePage';
 import { AppointmentBookingPage } from '../pages/patient/AppointmentBookingPage';
@@ -43,6 +44,7 @@ export function AppRouter() {
 				<Route path="/doctor/dashboard" element={<Navigate to="/doctor/profile" replace />} />
 				<Route path="/doctor/profile" element={<DoctorProfilePage />} />
 				<Route path="/doctor/availability" element={<AvailabilityPage />} />
+				<Route path="/doctor/prescriptions" element={<PrescriptionPage />} />
 			</Route>
 
 			<Route element={<AdminRoute />}>

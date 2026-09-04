@@ -2,6 +2,7 @@ export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancell
 
 export type Appointment = {
 	appointmentId: number;
+	patientId?: number;
 	doctorId: number;
 	appointmentDate: string;
 	startTime: string;
@@ -9,6 +10,7 @@ export type Appointment = {
 	queueNumber: number;
 	status: string;
 	reason: string | null;
+	patientName?: string;
 	doctorName: string;
 	clinicName: string | null;
 };

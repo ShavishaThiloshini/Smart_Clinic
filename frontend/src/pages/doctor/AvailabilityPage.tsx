@@ -112,6 +112,7 @@ export function AvailabilityPage() {
         <p className="doctor-profile-role">DOCTOR PORTAL</p>
         <nav aria-label="Doctor navigation">
           <button type="button" onClick={() => navigate('/doctor/profile')}>My profile</button>
+          <button type="button" onClick={() => navigate('/doctor/prescriptions')}>Prescriptions</button>
           <button type="button" disabled>Appointments</button>
           <button type="button" disabled>Patients</button>
           <button type="button" className="avail-nav-active" onClick={() => navigate('/doctor/availability')}>Availability</button>
