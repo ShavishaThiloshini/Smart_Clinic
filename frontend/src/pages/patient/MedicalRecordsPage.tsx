@@ -5,14 +5,16 @@ import { MedicalHistoryTable } from '../../components/medical/MedicalHistoryTabl
 import { MedicalRecordCard } from '../../components/medical/MedicalRecordCard';
 import { useMedicalRecords } from '../../hooks/useMedicalRecords';
 import type { MedicalRecord } from '../../types/medical.types';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
   { label: 'Find a doctor', icon: '⌕', path: '/patient/search' },
   { label: 'My appointments', icon: '▣', path: '/patient/appointments' },
   { label: 'Medical records', icon: '▤', path: '/patient/medical-records' },
-  { label: 'Prescriptions', icon: '▱', path: '#' },
-  { label: 'Notifications', icon: '◌', path: '#' }
+  { label: 'Prescriptions', icon: '▱', path: '/patient/prescriptions' },
+  { label: 'Reviews', icon: '★', path: '/patient/reviews' },
+  { label: 'Notifications', icon: '◌', path: '/patient/notifications' }
 ];
 
 const API_BASE_URL =
@@ -22,6 +24,7 @@ const API_BASE_URL =
 
 export function MedicalRecordsPage() {
   const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
   const { records, loading, error, fetchPatientRecords, clearError } = useMedicalRecords();
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -97,9 +100,14 @@ export function MedicalRecordsPage() {
               className={`patient-nav-link ${index === 3 ? 'active' : ''}`}
               key={nav.label}
               type="button"
-              onClick={() => nav.path !== '#' && navigate(nav.path)}
+              onClick={() => navigate(nav.path)}
             >
               <span aria-hidden="true">{nav.icon}</span>{nav.label}
+              {nav.label === 'Notifications' && unreadCount > 0 && (
+                <span style={{ marginLeft: 'auto', backgroundColor: '#e53e3e', color: 'white', borderRadius: '50%', padding: '0.125rem 0.375rem', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                  {unreadCount}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -110,7 +118,9 @@ export function MedicalRecordsPage() {
         <header className="patient-header">
           <button className="mobile-menu" type="button" aria-label="Open navigation">☰</button>
           <div className="patient-header-spacer" />
-          <button className="notification-button" type="button" aria-label="Notifications">♧<span /></button>
+          <button className="notification-button" type="button" aria-label="Notifications" onClick={() => navigate('/patient/notifications')}>
+            ♧{unreadCount > 0 && <span />}
+          </button>
           <div
             className="patient-avatar"
             aria-hidden="true"

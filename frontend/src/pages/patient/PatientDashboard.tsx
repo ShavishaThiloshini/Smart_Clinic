@@ -1,18 +1,21 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
   { label: 'Find a doctor', icon: '⌕', path: '/patient/search' },
   { label: 'My appointments', icon: '▣', path: '/patient/appointments' },
   { label: 'Medical records', icon: '▤', path: '/patient/medical-records' },
-  { label: 'Prescriptions', icon: '▱', path: '#' },
-  { label: 'Notifications', icon: '◌', path: '#' }
+  { label: 'Prescriptions', icon: '▱', path: '/patient/prescriptions' },
+  { label: 'Reviews', icon: '★', path: '/patient/reviews' },
+  { label: 'Notifications', icon: '◌', path: '/patient/notifications' }
 ];
 
 export function PatientDashboard() {
   const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
   const patientName = useMemo(() => {
     try {
       const savedUser = JSON.parse(localStorage.getItem('sc_user') || '{}');
@@ -38,9 +41,14 @@ export function PatientDashboard() {
               className={`patient-nav-link ${index === 0 ? 'active' : ''}`} 
               key={nav.label} 
               type="button"
-              onClick={() => nav.path !== '#' && navigate(nav.path)}
+              onClick={() => navigate(nav.path)}
             >
               <span aria-hidden="true">{nav.icon}</span>{nav.label}
+              {nav.label === 'Notifications' && unreadCount > 0 && (
+                <span style={{ marginLeft: 'auto', backgroundColor: '#e53e3e', color: 'white', borderRadius: '50%', padding: '0.125rem 0.375rem', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                  {unreadCount}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -51,7 +59,9 @@ export function PatientDashboard() {
         <header className="patient-header">
           <button className="mobile-menu" type="button" aria-label="Open navigation">☰</button>
           <div className="patient-header-spacer" />
-          <button className="notification-button" type="button" aria-label="Notifications">♧<span /></button>
+          <button className="notification-button" type="button" aria-label="Notifications" onClick={() => navigate('/patient/notifications')}>
+            ♧{unreadCount > 0 && <span />}
+          </button>
           <div 
             className="patient-avatar" 
             aria-hidden="true" 
@@ -100,7 +110,7 @@ export function PatientDashboard() {
           <section className="quick-access"><div className="section-title"><div><p className="section-kicker">QUICK ACCESS</p><h2>Manage your care</h2></div></div><div className="quick-grid">
             <button type="button" className="quick-card" onClick={() => navigate('/patient/appointments')}><span className="quick-icon blue">▣</span><strong>My appointments</strong><small>View upcoming and past visits</small><i>→</i></button>
             <button type="button" className="quick-card" onClick={() => navigate('/patient/medical-records')}><span className="quick-icon teal">▤</span><strong>Medical records</strong><small>Review your consultation history</small><i>→</i></button>
-            <button type="button" className="quick-card"><span className="quick-icon purple">▱</span><strong>Prescriptions</strong><small>See your prescribed medicines</small><i>→</i></button>
+            <button type="button" className="quick-card" onClick={() => navigate('/patient/prescriptions')}><span className="quick-icon purple">▱</span><strong>Prescriptions</strong><small>See your prescribed medicines</small><i>→</i></button>
           </div></section>
 
           <section className="activity-section"><div className="section-title"><div><p className="section-kicker">RECENT ACTIVITY</p><h2>Updates for you</h2></div><button type="button">View all</button></div><div className="activity-list">

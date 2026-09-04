@@ -1,6 +1,7 @@
 'use strict';
 
 const { pool } = require('../config/db');
+const { createNotification } = require('./notification.controller');
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -192,7 +193,30 @@ async function createAppointment(req, res, next) {
     await connection.commit();
 
     const [rows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [result.insertId]);
-    return res.status(201).json({ success: true, message: 'Appointment booked successfully.', appointment: mapAppointment(rows[0]) });
+    const appointment = mapAppointment(rows[0]);
+
+    // Send notifications
+    const [docUser] = await connection.query('SELECT user_id AS userId FROM doctors WHERE doctor_id = ?', [doctorId]);
+    await createNotification({
+      connection,
+      userId: req.user.userId, // patient
+      appointmentId: appointment.appointmentId,
+      title: 'Appointment Created',
+      message: `Your appointment with Dr. ${appointment.doctorName} on ${appointment.appointmentDate} at ${appointment.startTime} has been created.`,
+      type: 'appointment_created'
+    });
+    if (docUser.length) {
+      await createNotification({
+        connection,
+        userId: docUser[0].userId, // doctor
+        appointmentId: appointment.appointmentId,
+        title: 'New Appointment',
+        message: `A new appointment has been scheduled by ${appointment.patientName} for ${appointment.appointmentDate} at ${appointment.startTime}.`,
+        type: 'appointment_created'
+      });
+    }
+
+    return res.status(201).json({ success: true, message: 'Appointment booked successfully.', appointment });
   } catch (error) {
     await connection.rollback();
     if (error.code === 'ER_DUP_ENTRY') {
@@ -261,7 +285,22 @@ async function cancelAppointment(req, res, next) {
     );
     await connection.commit();
     const [rows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [appointmentId]);
-    return res.json({ success: true, message: 'Appointment cancelled successfully.', appointment: mapAppointment(rows[0]) });
+    const cancelledAppt = mapAppointment(rows[0]);
+
+    // Notify doctor
+    const [docUser] = await connection.query('SELECT user_id AS userId FROM doctors WHERE doctor_id = ?', [cancelledAppt.doctorId]);
+    if (docUser.length) {
+      await createNotification({
+        connection,
+        userId: docUser[0].userId,
+        appointmentId: cancelledAppt.appointmentId,
+        title: 'Appointment Cancelled',
+        message: `${cancelledAppt.patientName} has cancelled their appointment on ${cancelledAppt.appointmentDate} at ${cancelledAppt.startTime}.`,
+        type: 'appointment_cancelled'
+      });
+    }
+
+    return res.json({ success: true, message: 'Appointment cancelled successfully.', appointment: cancelledAppt });
   } catch (error) {
     await connection.rollback();
     next(error);
@@ -331,7 +370,22 @@ async function rescheduleAppointment(req, res, next) {
     await connection.commit();
 
     const [rows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [appointmentId]);
-    return res.json({ success: true, message: 'Appointment rescheduled successfully.', appointment: mapAppointment(rows[0]) });
+    const rescheduledAppt = mapAppointment(rows[0]);
+
+    // Notify doctor
+    const [docUser] = await connection.query('SELECT user_id AS userId FROM doctors WHERE doctor_id = ?', [rescheduledAppt.doctorId]);
+    if (docUser.length) {
+      await createNotification({
+        connection,
+        userId: docUser[0].userId,
+        appointmentId: rescheduledAppt.appointmentId,
+        title: 'Appointment Rescheduled',
+        message: `${rescheduledAppt.patientName} has rescheduled their appointment to ${rescheduledAppt.appointmentDate} at ${rescheduledAppt.startTime}.`,
+        type: 'appointment_rescheduled'
+      });
+    }
+
+    return res.json({ success: true, message: 'Appointment rescheduled successfully.', appointment: rescheduledAppt });
   } catch (error) {
     await connection.rollback();
     if (error.code === 'ER_DUP_ENTRY') {
@@ -447,7 +501,22 @@ async function updateAppointmentStatus(req, res, next) {
     await connection.commit();
 
     const [updatedRows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [appointmentId]);
-    return res.json({ success: true, message: 'Appointment status updated successfully.', appointment: mapAppointment(updatedRows[0]) });
+    const updatedAppt = mapAppointment(updatedRows[0]);
+
+    // Notify patient about status update (e.g., confirmed, cancelled)
+    const [patUser] = await connection.query('SELECT user_id AS userId FROM patients WHERE patient_id = ?', [updatedAppt.patientId]);
+    if (patUser.length) {
+      await createNotification({
+        connection,
+        userId: patUser[0].userId,
+        appointmentId: updatedAppt.appointmentId,
+        title: `Appointment ${updatedAppt.status.charAt(0).toUpperCase() + updatedAppt.status.slice(1)}`,
+        message: `Your appointment with Dr. ${updatedAppt.doctorName} has been marked as ${updatedAppt.status}.`,
+        type: `appointment_${updatedAppt.status}`
+      });
+    }
+
+    return res.json({ success: true, message: 'Appointment status updated successfully.', appointment: updatedAppt });
 
   } catch (error) {
     await connection.rollback();

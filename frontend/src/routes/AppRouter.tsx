@@ -12,6 +12,9 @@ import { AppointmentHistoryPage } from '../pages/patient/AppointmentHistoryPage'
 import { MedicalRecordsPage } from '../pages/patient/MedicalRecordsPage';
 import { PatientDashboard } from '../pages/patient/PatientDashboard';
 import { PatientProfilePage } from '../pages/patient/PatientProfilePage';
+import { PrescriptionsPage } from '../pages/patient/PrescriptionsPage';
+import { ReviewPage } from '../pages/patient/ReviewPage';
+import { NotificationsPage } from '../pages/patient/NotificationsPage';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 
@@ -28,6 +31,9 @@ export function AppRouter() {
 				<Route path="/patient/search" element={<DoctorSearchPage />} />
 				<Route path="/patient/appointments" element={<AppointmentHistoryPage />} />
 				<Route path="/patient/medical-records" element={<MedicalRecordsPage />} />
+				<Route path="/patient/prescriptions" element={<PrescriptionsPage />} />
+				<Route path="/patient/reviews" element={<ReviewPage />} />
+				<Route path="/patient/notifications" element={<NotificationsPage />} />
 				<Route path="/patient/doctor/:doctorId" element={<DoctorPublicProfilePage />} />
 				<Route path="/patient/book/:doctorId" element={<AppointmentBookingPage />} />
 				<Route path="/patient/booking-confirmation" element={<BookingConfirmationPage />} />
