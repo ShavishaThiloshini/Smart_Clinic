@@ -10,6 +10,7 @@
     "db:seed": "node scripts/seed.js",
     "db:migrate:patient-profile": "node scripts/migrate-patient-profile.js",
     "db:migrate:prescriptions": "node scripts/migrate-prescriptions.js",
+    "db:migrate:reviews": "node scripts/migrate-reviews.js",
     "test:auth": "node scripts/test-auth.js",
     "test:middleware": "node scripts/test-auth-middleware.js",
     "test:patient-profile": "node scripts/test-patient-profile-validation.js",
@@ -22,6 +23,7 @@
     "test:medical-record-security": "node scripts/test-medical-record-security.js",
     "test:prescriptions": "node scripts/test-prescription-validation.js",
     "test:prescriptions-api": "node scripts/test-prescription-api.js",
+    "test:reviews": "node scripts/test-review-api.js",
     "test:milestone3": "node scripts/test-milestone3.js",
     "test:milestone1": "node scripts/test-milestone1.js",
     "test:day10": "node scripts/test-milestone1.js"

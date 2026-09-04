@@ -100,3 +100,12 @@ For the full Milestone 3 prescription integration suite, start the backend and M
 ```bash
 npm run test:milestone3
 ```
+
+## Reviews API
+
+- `POST /api/reviews` — patient submits one review for a completed appointment.
+- `GET /api/reviews/doctor/:doctorId` — public approved reviews for a doctor.
+- `GET /api/reviews/my` — signed-in patient reviews.
+- `GET /api/reviews/admin` and `PATCH /api/reviews/:reviewId/status` — admin moderation.
+
+Apply indexes to an existing database with `npm run db:migrate:reviews`, then run `npm run test:reviews` with the backend and MySQL running.

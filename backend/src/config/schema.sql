@@ -108,12 +108,16 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 CREATE TABLE IF NOT EXISTS reviews (
   review_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, patient_id INT UNSIGNED NOT NULL, doctor_id INT UNSIGNED NOT NULL,
-  appointment_id INT UNSIGNED NULL, rating TINYINT UNSIGNED NOT NULL, comment TEXT, status VARCHAR(50) NOT NULL DEFAULT 'pending',
+  appointment_id INT UNSIGNED NOT NULL, rating TINYINT UNSIGNED NOT NULL, comment TEXT, status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT chk_review_rating CHECK (rating BETWEEN 1 AND 5),
   CONSTRAINT fk_reviews_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE,
   CONSTRAINT fk_reviews_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id) ON DELETE CASCADE,
-  CONSTRAINT fk_reviews_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id)
+  CONSTRAINT fk_reviews_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id),
+  CONSTRAINT uq_reviews_appointment UNIQUE (appointment_id),
+  INDEX idx_reviews_doctor_status_created (doctor_id, status, created_at),
+  INDEX idx_reviews_patient_created (patient_id, created_at),
+  CONSTRAINT chk_review_status CHECK (status IN ('pending', 'approved', 'rejected'))
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS audit_logs (
