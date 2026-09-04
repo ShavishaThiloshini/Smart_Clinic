@@ -37,14 +37,14 @@ export function ReviewPage() {
   }, [fetchMyReviews, fetchAppointmentHistory]);
 
   const completedAppointments = useMemo(() => {
-    return appointments.filter(a => a.status === 'completed');
+    return appointments.filter((a: any) => a.status === 'completed');
   }, [appointments]);
 
   const reviewedAppointmentIds = useMemo(() => {
     return new Set(reviews.map(r => r.appointmentId));
   }, [reviews]);
 
-  const unreviewedAppointments = completedAppointments.filter(a => !reviewedAppointmentIds.has(a.appointmentId));
+  const unreviewedAppointments = completedAppointments.filter((a: any) => !reviewedAppointmentIds.has(a.appointmentId));
 
   function logout() {
     localStorage.removeItem('sc_token');
@@ -119,7 +119,7 @@ export function ReviewPage() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {unreviewedAppointments.map(appt => (
+                  {unreviewedAppointments.map((appt: any) => (
                     <div key={appt.appointmentId} style={{ backgroundColor: '#fff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <p style={{ margin: '0 0 0.25rem', fontWeight: 600 }}>Dr. {appt.doctorName}</p>
