@@ -1,0 +1,28 @@
+'use strict';
+
+require('dotenv').config();
+const bcrypt = require('bcryptjs'); const mysql = require('mysql2/promise');
+const { resetCounters, assert, request, login, printHeader, printSummary } = require('./test-helpers');
+async function createProfile(connection, { role, email, name, password }) { const [user] = await connection.query('INSERT INTO users (name, email, password_hash, role, status) VALUES (?, ?, ?, ?, \'active\')', [name, email, await bcrypt.hash(password, 10), role]); if (role === 'patient') { const [profile] = await connection.query('INSERT INTO patients (user_id) VALUES (?)', [user.insertId]); return { patientId: profile.insertId, email, password }; } const [profile] = await connection.query('INSERT INTO doctors (user_id, approval_status) VALUES (?, \'approved\')', [user.insertId]); return { doctorId: profile.insertId, email, password }; }
+async function run() {
+  resetCounters(); printHeader('Smart Clinic - Prescription API Integration Tests');
+  const connection = await mysql.createConnection({ host: process.env.DB_HOST || 'localhost', port: Number(process.env.DB_PORT || 3306), database: process.env.DB_NAME || 'smart_clinic', user: process.env.DB_USER || 'root', password: process.env.DB_PASSWORD || '' }); const suffix = Date.now(); const emails = [];
+  try {
+    const patient = await createProfile(connection, { role: 'patient', name: 'Prescription Patient', email: `rx.patient.${suffix}@clinic.test`, password: 'PatientRx@123' }); const doctor = await createProfile(connection, { role: 'doctor', name: 'Prescription Doctor', email: `rx.doctor.${suffix}@clinic.test`, password: 'DoctorRx@123' }); const otherDoctor = await createProfile(connection, { role: 'doctor', name: 'Other Prescription Doctor', email: `rx.other.${suffix}@clinic.test`, password: 'OtherDoctorRx@123' }); emails.push(patient.email, doctor.email, otherDoctor.email);
+    const [completed] = await connection.query("INSERT INTO appointments (patient_id, doctor_id, appointment_date, start_time, end_time, queue_number, status) VALUES (?, ?, '2099-02-01', '09:00', '09:30', 1, 'completed')", [patient.patientId, doctor.doctorId]); const [pending] = await connection.query("INSERT INTO appointments (patient_id, doctor_id, appointment_date, start_time, end_time, queue_number, status) VALUES (?, ?, '2099-02-02', '09:00', '09:30', 1, 'pending')", [patient.patientId, doctor.doctorId]);
+    const doctorToken = await login({ email: doctor.email, password: doctor.password }); const patientToken = await login({ email: patient.email, password: patient.password }); const otherDoctorToken = await login({ email: otherDoctor.email, password: otherDoctor.password });
+    const patientCreate = await request('POST', '/api/prescriptions', { token: patientToken, body: { patientId: patient.patientId, items: [{ medicineName: 'Paracetamol' }] } }); assert('Patient cannot create prescriptions -> 403', patientCreate.status === 403, JSON.stringify(patientCreate.json));
+    const blankMedicine = await request('POST', '/api/prescriptions', { token: doctorToken, body: { patientId: patient.patientId, items: [{ medicineName: '  ' }] } }); assert('Blank medicine name is rejected -> 422', blankMedicine.status === 422, JSON.stringify(blankMedicine.json));
+    const pendingPrescription = await request('POST', '/api/prescriptions', { token: doctorToken, body: { patientId: patient.patientId, appointmentId: pending.insertId, items: [{ medicineName: 'Paracetamol' }] } }); assert('Pending appointment is rejected -> 422', pendingPrescription.status === 422, JSON.stringify(pendingPrescription.json));
+    const created = await request('POST', '/api/prescriptions', { token: doctorToken, body: { patientId: patient.patientId, appointmentId: completed.insertId, notes: 'Take after meals.', items: [{ medicineName: 'Paracetamol', dosage: '500 mg', frequency: 'Twice daily', duration: '3 days' }, { medicineName: 'Cetirizine', dosage: '10 mg', frequency: 'At night', duration: '5 days' }] } }); assert('Doctor creates a prescription for completed appointment -> 201', created.status === 201, JSON.stringify(created.json)); const prescriptionId = created.json?.prescription?.prescriptionId; assert('Create response contains both medicine items', created.json?.prescription?.items?.length === 2, JSON.stringify(created.json));
+    const patientView = await request('GET', `/api/prescriptions/${prescriptionId}`, { token: patientToken }); assert('Patient can view own prescription -> 200', patientView.status === 200, JSON.stringify(patientView.json)); const otherDoctorView = await request('GET', `/api/prescriptions/${prescriptionId}`, { token: otherDoctorToken }); assert('Other doctor cannot view prescription -> 403', otherDoctorView.status === 403, JSON.stringify(otherDoctorView.json)); const appointmentList = await request('GET', `/api/prescriptions/appointment/${completed.insertId}`, { token: doctorToken }); assert('Doctor retrieves linked appointment prescription -> 200', appointmentList.status === 200 && appointmentList.json?.prescriptions?.length === 1, JSON.stringify(appointmentList.json));
+  } finally {
+    if (emails.length) {
+      await connection.query("DELETE p FROM prescriptions p JOIN patients pt ON pt.patient_id = p.patient_id JOIN users u ON u.user_id = pt.user_id WHERE u.email LIKE 'rx.%@clinic.test'");
+      await connection.query("DELETE FROM users WHERE email LIKE 'rx.%@clinic.test'");
+    }
+    await connection.end();
+  }
+  if (printSummary() > 0) process.exit(1);
+}
+run().catch((error) => { console.error('Prescription API integration test failed:', error.message); process.exit(1); });

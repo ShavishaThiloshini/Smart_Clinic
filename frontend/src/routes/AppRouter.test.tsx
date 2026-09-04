@@ -89,6 +89,6 @@ describe('AppRouter', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole('heading', { name: /Your medical records/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Your medical records/i, level: 1 })).toBeInTheDocument();
   });
 });

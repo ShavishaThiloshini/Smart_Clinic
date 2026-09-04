@@ -21,6 +21,8 @@
     "test:appointments": "node scripts/test-appointments.js",
     "test:medical-record-security": "node scripts/test-medical-record-security.js",
     "test:prescriptions": "node scripts/test-prescription-validation.js",
+    "test:prescriptions-api": "node scripts/test-prescription-api.js",
+    "test:milestone3": "node scripts/test-milestone3.js",
     "test:milestone1": "node scripts/test-milestone1.js",
     "test:day10": "node scripts/test-milestone1.js"
   },

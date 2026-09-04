@@ -94,3 +94,9 @@ The command is safe to run repeatedly. To check prescription request validation 
 ```bash
 npm run test:prescriptions
 ```
+
+For the full Milestone 3 prescription integration suite, start the backend and MySQL, then run:
+
+```bash
+npm run test:milestone3
+```
