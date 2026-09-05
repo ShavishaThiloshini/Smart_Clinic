@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AdminRoute } from './AdminRoute';
 import { DoctorRoute } from './DoctorRoute';
 import { PatientRoute } from './PatientRoute';
+import { AdminDashboard } from '../pages/admin/AdminDashboard';
 import { AvailabilityPage } from '../pages/doctor/AvailabilityPage';
 import { DoctorProfilePage } from '../pages/doctor/DoctorProfilePage';
 import { PrescriptionPage } from '../pages/doctor/PrescriptionPage';
@@ -48,7 +49,7 @@ export function AppRouter() {
 			</Route>
 
 			<Route element={<AdminRoute />}>
-				<Route path="/admin/dashboard" element={<Navigate to="/login" replace />} />
+				<Route path="/admin/dashboard" element={<AdminDashboard />} />
 			</Route>
 			<Route path="*" element={<Navigate to="/login" replace />} />
 		</Routes>
