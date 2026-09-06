@@ -2,7 +2,13 @@
 
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth.middleware');
-const { getDashboard } = require('../controllers/admin.controller');
+const {
+  getDashboard,
+  getUsers,
+  updateUserStatus,
+  getDoctors,
+  updateDoctorApproval
+} = require('../controllers/admin.controller');
 
 /**
  * Admin router
@@ -24,6 +30,10 @@ function createAdminRouter() {
   router.use(protect, authorize('admin'));
 
   router.get('/dashboard', getDashboard);
+  router.get('/users', getUsers);
+  router.patch('/users/:userId/status', updateUserStatus);
+  router.get('/doctors', getDoctors);
+  router.patch('/doctors/:doctorId/approval', updateDoctorApproval);
 
   return router;
 }
