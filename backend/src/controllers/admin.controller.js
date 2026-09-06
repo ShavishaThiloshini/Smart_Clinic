@@ -133,10 +133,48 @@ async function updateDoctorApproval(req, res, next) {
   }
 }
 
+async function getUserById(req, res, next) {
+  try {
+    const [users] = await pool.query(
+      `SELECT user_id AS userId, name, email, role, status,
+              created_at AS createdAt, updated_at AS updatedAt
+       FROM users WHERE user_id = ?`,
+      [req.params.userId]
+    );
+    if (!users.length) return res.status(404).json({ success: false, message: 'User not found.' });
+    return res.json({ success: true, user: users[0] });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getDoctorById(req, res, next) {
+  try {
+    const [doctors] = await pool.query(
+      `SELECT d.doctor_id AS doctorId, d.user_id AS userId, u.name, u.email, u.status,
+              d.approval_status AS approvalStatus, d.qualifications, d.experience,
+              d.consultation_fee AS consultationFee, d.bio,
+              s.name AS specialization, c.name AS clinic, d.created_at AS createdAt
+       FROM doctors d
+       JOIN users u ON u.user_id = d.user_id
+       LEFT JOIN specializations s ON s.specialization_id = d.specialization_id
+       LEFT JOIN clinics c ON c.clinic_id = d.clinic_id
+       WHERE d.doctor_id = ?`,
+      [req.params.doctorId]
+    );
+    if (!doctors.length) return res.status(404).json({ success: false, message: 'Doctor not found.' });
+    return res.json({ success: true, doctor: doctors[0] });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getDashboard,
   getUsers,
+  getUserById,
   updateUserStatus,
   getDoctors,
+  getDoctorById,
   updateDoctorApproval
 };

@@ -5,8 +5,10 @@ const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getDashboard,
   getUsers,
+  getUserById,
   updateUserStatus,
   getDoctors,
+  getDoctorById,
   updateDoctorApproval
 } = require('../controllers/admin.controller');
 
@@ -22,6 +24,12 @@ const {
  *
  * Endpoints:
  *   GET /api/admin/dashboard  — system-wide stats
+ *   GET /api/admin/users
+ *   GET /api/admin/users/:userId
+ *   PUT /api/admin/users/:userId/status
+ *   GET /api/admin/doctors
+ *   GET /api/admin/doctors/:doctorId
+ *   PUT /api/admin/doctors/:doctorId/approval
  */
 function createAdminRouter() {
   const router = express.Router();
@@ -29,11 +37,16 @@ function createAdminRouter() {
   // Apply protect + authorize to every route in this router
   router.use(protect, authorize('admin'));
 
+  // Dashboard
   router.get('/dashboard', getDashboard);
   router.get('/users', getUsers);
+  router.get('/users/:userId', getUserById);
   router.patch('/users/:userId/status', updateUserStatus);
+  router.put('/users/:userId/status', updateUserStatus);
   router.get('/doctors', getDoctors);
+  router.get('/doctors/:doctorId', getDoctorById);
   router.patch('/doctors/:doctorId/approval', updateDoctorApproval);
+  router.put('/doctors/:doctorId/approval', updateDoctorApproval);
 
   return router;
 }
