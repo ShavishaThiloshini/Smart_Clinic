@@ -109,3 +109,13 @@ npm run test:milestone3
 - `GET /api/reviews/admin` and `PATCH /api/reviews/:reviewId/status` — admin moderation.
 
 Apply indexes to an existing database with `npm run db:migrate:reviews`, then run `npm run test:reviews` with the backend and MySQL running.
+
+## Admin dashboard API
+
+- `GET /api/admin/dashboard` — admin-only system totals and appointment status counts.
+
+The endpoint requires an admin JWT. Verify the Day 23 API structure with:
+
+```bash
+npm run test:admin
+```
