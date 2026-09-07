@@ -39,3 +39,27 @@ export interface ReportData {
 	monthlyTrend: AppointmentTrend[];
 	topDoctors: TopDoctor[];
 }
+
+export type AdminUser = {
+	userId: number;
+	name: string;
+	email: string;
+	role: 'patient' | 'doctor' | 'admin';
+	status: string;
+	createdAt: string;
+};
+
+export type AdminDoctor = {
+	doctorId: number;
+	userId: number;
+	name: string;
+	email: string;
+	status: string;
+	approvalStatus: string;
+	qualifications?: string | null;
+	experience?: number | null;
+	consultationFee?: number | string | null;
+	specialization?: string | null;
+	clinic?: string | null;
+	createdAt: string;
+};

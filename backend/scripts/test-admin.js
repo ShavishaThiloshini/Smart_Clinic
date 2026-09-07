@@ -56,6 +56,38 @@ async function run() {
     );
   }
 
+  {
+    const { status, json } = await request('GET', '/api/admin/users', { token: adminToken });
+    assert('Admin can list users -> 200', status === 200, JSON.stringify(json));
+    assert('User management response contains users array', Array.isArray(json?.users), JSON.stringify(json));
+  }
+
+  {
+    const { status, json } = await request('GET', '/api/admin/doctors', { token: adminToken });
+    assert('Admin can list doctors -> 200', status === 200, JSON.stringify(json));
+    assert('Doctor management response contains doctors array', Array.isArray(json?.doctors), JSON.stringify(json));
+  }
+
+  {
+    const users = await request('GET', '/api/admin/users', { token: patientToken });
+    const doctors = await request('GET', '/api/admin/doctors', { token: patientToken });
+    assert('Patient cannot list users -> 403', users.status === 403, JSON.stringify(users.json));
+    assert('Patient cannot list doctors -> 403', doctors.status === 403, JSON.stringify(doctors.json));
+  }
+
+  {
+    const { status } = await request('PATCH', '/api/admin/users/invalid/status', {
+      token: adminToken,
+      body: { status: 'unknown' }
+    });
+    assert('Invalid user status is rejected -> 422', status === 422);
+    const approval = await request('PATCH', '/api/admin/doctors/invalid/approval', {
+      token: adminToken,
+      body: { approvalStatus: 'unknown' }
+    });
+    assert('Invalid doctor approval is rejected -> 422', approval.status === 422);
+  }
+
   if (printSummary() > 0) process.exit(1);
 }
 

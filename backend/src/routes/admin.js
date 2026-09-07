@@ -2,7 +2,7 @@
 
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth.middleware');
-const { 
+const {
   getDashboard,
   getUsers,
   getUserById,
@@ -39,15 +39,13 @@ function createAdminRouter() {
 
   // Dashboard
   router.get('/dashboard', getDashboard);
-
-  // User Management
   router.get('/users', getUsers);
   router.get('/users/:userId', getUserById);
+  router.patch('/users/:userId/status', updateUserStatus);
   router.put('/users/:userId/status', updateUserStatus);
-
-  // Doctor Management
   router.get('/doctors', getDoctors);
   router.get('/doctors/:doctorId', getDoctorById);
+  router.patch('/doctors/:doctorId/approval', updateDoctorApproval);
   router.put('/doctors/:doctorId/approval', updateDoctorApproval);
 
   return router;
