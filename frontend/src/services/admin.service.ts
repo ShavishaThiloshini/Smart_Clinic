@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import type { AdminDashboardStats, ReportData } from '../types/admin.types';
-=======
-import type { AdminDashboardStats, AdminDoctor, AdminUser } from '../types/admin.types';
->>>>>>> f46debf588daf4da471c296f2a61b8d9e0506d8d
+import type { AdminDashboardStats, ReportData, AdminDoctor, AdminUser } from '../types/admin.types';
 
 function authHeaders(): HeadersInit {
 	return {
@@ -22,7 +18,6 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
 	return data.stats;
 }
 
-<<<<<<< HEAD
 /**
  * Fetch all report data needed for the Reports Dashboard.
  * Calls /api/admin/dashboard (which exists) for the core stats,
@@ -72,7 +67,8 @@ export async function getReportData(): Promise<ReportData> {
 			topDoctors: [],
 		};
 	}
-=======
+}
+
 export async function getAdminUsers(filters: { q?: string; role?: string; status?: string } = {}): Promise<AdminUser[]> {
 	const params = new URLSearchParams();
 	Object.entries(filters).forEach(([key, value]) => value && params.set(key, value));
@@ -99,5 +95,4 @@ export async function updateDoctorApproval(doctorId: number, approvalStatus: str
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ approvalStatus })
 	});
->>>>>>> f46debf588daf4da471c296f2a61b8d9e0506d8d
 }
