@@ -204,6 +204,7 @@
 @media(max-width:640px){.avail-slot-row{flex-direction:column;align-items:flex-start}.avail-slot-times{gap:8px}.avail-time-input{width:100px}.avail-footer{flex-direction:column;align-items:stretch}.avail-footer-actions{justify-content:flex-end}}
 
 /* ── Alert error / success utility ── */
+.admin-refresh-button{border:1px solid #315be7;border-radius:9px;padding:10px 14px;background:#315be7;color:#fff;font:700 .82rem inherit;cursor:pointer}.admin-refresh-button:hover:not(:disabled){background:#2449c8}.admin-refresh-button:disabled,.admin-table select:disabled{cursor:not-allowed;opacity:.6}.admin-loading{color:#64748b}
 .alert-error{padding:12px 16px;border:1px solid #fecaca;border-radius:10px;background:#fff5f5;color:#b91c1c;font-size:.875rem;font-weight:600}
 
 /* ── Breadcrumb ── */
