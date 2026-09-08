@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import { apiRequest } from '../../services/api';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const SLOT_DURATIONS = [15, 20, 30, 45, 60];
@@ -33,17 +34,12 @@ export function AvailabilityPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/doctor/availability', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('sc_token') || ''}` }
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
+        const data = await apiRequest<{ success: boolean; availability: Slot[] }>('/api/doctor/availability');
+        if (data.success) {
           setSlots(data.availability);
-        } else if (res.status !== 404) {
-          setNotice({ type: 'error', text: data.message || 'Unable to load availability.' });
         }
-      } catch {
-        setNotice({ type: 'error', text: 'Unable to reach the availability service.' });
+      } catch (err) {
+        setNotice({ type: 'error', text: err instanceof Error ? err.message : 'Unable to load availability.' });
       } finally {
         setLoading(false);
       }
@@ -74,16 +70,10 @@ export function AvailabilityPage() {
     setSaving(true);
     setNotice({ type: '', text: '' });
     try {
-      const res = await fetch('/api/doctor/availability', {
+      const data = await apiRequest<{ availability: Slot[] }>('/api/doctor/availability', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('sc_token') || ''}`
-        },
         body: JSON.stringify({ availability: slots })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to save.');
       setSlots(data.availability);
       setNotice({ type: 'success', text: 'Availability saved successfully.' });
     } catch (err) {

@@ -1,20 +1,8 @@
 import type { AdminDashboardStats, ReportData, AdminDoctor, AdminUser } from '../types/admin.types';
-
-function authHeaders(): HeadersInit {
-	return {
-		Authorization: `Bearer ${localStorage.getItem('sc_token') || ''}`,
-	};
-}
-
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
-	const response = await fetch(url, { ...options, headers: { ...authHeaders(), ...options.headers } });
-	const data = await response.json();
-	if (!response.ok) throw new Error(data.message || 'Unable to complete admin action.');
-	return data;
-}
+import { apiRequest } from './api';
 
 export async function getDashboardStats(): Promise<AdminDashboardStats> {
-	const data = await request<{ stats: AdminDashboardStats }>('/api/admin/dashboard');
+	const data = await apiRequest<{ stats: AdminDashboardStats }>('/api/admin/dashboard');
 	return data.stats;
 }
 
@@ -26,7 +14,7 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
  */
 export async function getReportData(): Promise<ReportData> {
 	// Always fetch the dashboard stats (they are already implemented)
-	const statsData = await request<{ stats: AdminDashboardStats }>('/api/admin/dashboard');
+	const statsData = await apiRequest<{ stats: AdminDashboardStats }>('/api/admin/dashboard');
 	const summary = statsData.stats;
 
 	// Derive status breakdown from the dashboard stats we already have
@@ -46,7 +34,7 @@ export async function getReportData(): Promise<ReportData> {
 
 	// Try to fetch extended report data from /api/admin/reports
 	try {
-		const extended = await request<{
+		const extended = await apiRequest<{
 			monthlyTrend?: ReportData['monthlyTrend'];
 			topDoctors?: ReportData['topDoctors'];
 			statusBreakdown?: ReportData['statusBreakdown'];
@@ -72,12 +60,12 @@ export async function getReportData(): Promise<ReportData> {
 export async function getAdminUsers(filters: { q?: string; role?: string; status?: string } = {}): Promise<AdminUser[]> {
 	const params = new URLSearchParams();
 	Object.entries(filters).forEach(([key, value]) => value && params.set(key, value));
-	const data = await request<{ users: AdminUser[] }>(`/api/admin/users?${params.toString()}`);
+	const data = await apiRequest<{ users: AdminUser[] }>(`/api/admin/users?${params.toString()}`);
 	return data.users || [];
 }
 
 export async function updateAdminUserStatus(userId: number, status: string): Promise<void> {
-	await request(`/api/admin/users/${userId}/status`, {
+	await apiRequest(`/api/admin/users/${userId}/status`, {
 		method: 'PATCH',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ status })
@@ -85,12 +73,12 @@ export async function updateAdminUserStatus(userId: number, status: string): Pro
 }
 
 export async function getAdminDoctors(): Promise<AdminDoctor[]> {
-	const data = await request<{ doctors: AdminDoctor[] }>('/api/admin/doctors');
+	const data = await apiRequest<{ doctors: AdminDoctor[] }>('/api/admin/doctors');
 	return data.doctors || [];
 }
 
 export async function updateDoctorApproval(doctorId: number, approvalStatus: string): Promise<void> {
-	await request(`/api/admin/doctors/${doctorId}/approval`, {
+	await apiRequest(`/api/admin/doctors/${doctorId}/approval`, {
 		method: 'PATCH',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ approvalStatus })

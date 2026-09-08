@@ -6,6 +6,7 @@ import { MedicalRecordCard } from '../../components/medical/MedicalRecordCard';
 import { useMedicalRecords } from '../../hooks/useMedicalRecords';
 import type { MedicalRecord } from '../../types/medical.types';
 import { useNotifications } from '../../hooks/useNotifications';
+import { apiRequest } from '../../services/api';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -16,11 +17,6 @@ const navigation = [
   { label: 'Reviews', icon: '★', path: '/patient/reviews' },
   { label: 'Notifications', icon: '◌', path: '/patient/notifications' }
 ];
-
-const API_BASE_URL =
-  typeof window !== 'undefined' && window.location?.origin
-    ? window.location.origin
-    : 'http://localhost:3000';
 
 export function MedicalRecordsPage() {
   const navigate = useNavigate();
@@ -43,23 +39,8 @@ export function MedicalRecordsPage() {
 
     async function loadPatientRecords() {
       try {
-        const token = localStorage.getItem('sc_token');
-
-        if (!token) {
-          throw new Error('Please log in again to view your records.');
-        }
-
-        const profileRes = await fetch(`${API_BASE_URL}/api/patient/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        const profileJson = await profileRes.json();
-
-        if (!profileRes.ok || !profileJson?.success || !profileJson?.profile?.patientId) {
-          throw new Error(profileJson?.message || 'Unable to load your profile.');
-        }
+        const profileJson = await apiRequest<{ success: boolean; profile?: { patientId?: number } }>('/api/patient/profile');
+        if (!profileJson?.success || !profileJson?.profile?.patientId) throw new Error('Unable to load your profile.');
 
         const patientId = profileJson.profile.patientId;
         

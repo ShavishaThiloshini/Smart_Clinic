@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DoctorSearchCard } from '../../components/doctor/DoctorSearchCard';
 import logo from '../../assets/images/logo.png';
+import { apiRequest } from '../../services/api';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -66,21 +67,11 @@ export function DoctorSearchPage() {
       if (filters.specialty.trim()) params.append('specialization', filters.specialty.trim());
       if (filters.clinicName.trim()) params.append('clinic', filters.clinicName.trim());
 
-      const res = await fetch(`/api/doctors?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sc_token')}`
-        }
-      });
-      const data = await res.json();
-      
-      if (!res.ok) {
-        setError(data.message || 'Failed to fetch doctors.');
-        return;
-      }
+      const data = await apiRequest<{ doctors?: Doctor[] }>(`/api/doctors?${params.toString()}`);
       
       setDoctors(data.doctors || []);
     } catch (err) {
-      setError('An error occurred while fetching doctors.');
+      setError(err instanceof Error ? err.message : 'Unable to load doctors. Please try again.');
     } finally {
       setIsLoading(false);
     }

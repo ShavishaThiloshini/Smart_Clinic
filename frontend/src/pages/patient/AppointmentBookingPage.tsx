@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import { apiRequest } from '../../services/api';
 
 /* ──────────────────── Types ──────────────────── */
 type DoctorSummary = {
@@ -145,11 +146,9 @@ export function AppointmentBookingPage() {
   /* Load doctor + availability */
   useEffect(() => {
     if (!doctorId) { setInitError('Invalid doctor.'); setLoadingInit(false); return; }
-    const token = localStorage.getItem('sc_token') || '';
-    const headers = { Authorization: `Bearer ${token}` };
     Promise.all([
-      fetch(`/api/doctors/${doctorId}`, { headers }).then((r) => r.json()),
-      fetch(`/api/doctors/${doctorId}/availability`, { headers }).then((r) => r.json()),
+      apiRequest<{ success: boolean; doctor: DoctorSummary; message?: string }>(`/api/doctors/${doctorId}`),
+      apiRequest<{ success: boolean; availability?: AvailabilitySlot[] }>(`/api/doctors/${doctorId}/availability`),
     ])
       .then(([doctorData, availData]) => {
         if (!doctorData.success) { setInitError(doctorData.message || 'Doctor not found.'); return; }
@@ -218,10 +217,8 @@ export function AppointmentBookingPage() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const token = localStorage.getItem('sc_token') || '';
-      const res = await fetch('/api/appointments', {
+      const data = await apiRequest<{ appointment: unknown }>('/api/appointments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           doctorId: doctor.doctorId,
           appointmentDate: isoDate(selectedDate),
@@ -229,14 +226,9 @@ export function AppointmentBookingPage() {
           reason: reason.trim(),
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setSubmitError(data.message || 'Booking failed. Please try again.');
-        return;
-      }
       navigate('/patient/booking-confirmation', { state: { appointment: data.appointment } });
-    } catch {
-      setSubmitError('Network error. Please try again.');
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Unable to book this appointment. Please try again.');
     } finally {
       setSubmitting(false);
     }

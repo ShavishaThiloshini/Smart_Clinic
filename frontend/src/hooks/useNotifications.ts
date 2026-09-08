@@ -29,7 +29,7 @@ export function useNotifications() {
       setNotifications(prev => prev.map(n => n.notificationId === notificationId ? updated : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
-      console.error('Failed to mark notification as read:', err);
+      setError(err instanceof Error ? err.message : 'Unable to update this notification.');
     }
   }, []);
 
@@ -39,13 +39,13 @@ export function useNotifications() {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (err) {
-      console.error('Failed to mark all as read:', err);
+      setError(err instanceof Error ? err.message : 'Unable to update notifications.');
     }
   }, []);
 
   // Fetch count initially
   useEffect(() => {
-    getUnreadCount().then(setUnreadCount).catch(console.error);
+    getUnreadCount().then(setUnreadCount).catch((err) => setError(err instanceof Error ? err.message : 'Unable to load notification count.'));
   }, []);
 
   return {

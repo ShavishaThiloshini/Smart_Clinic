@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import { apiRequest } from '../../services/api';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -70,22 +71,19 @@ export function DoctorPublicProfilePage() {
 
   useEffect(() => {
     if (!doctorId) { setError('Invalid doctor.'); setLoading(false); return; }
-    const token = localStorage.getItem('sc_token') || '';
-    const headers = { Authorization: `Bearer ${token}` };
-
     setLoading(true);
     Promise.all([
-      fetch(`/api/doctors/${doctorId}`, { headers }).then((r) => r.json()),
-      fetch(`/api/doctors/${doctorId}/availability`, { headers }).then((r) => r.json()),
+      apiRequest<{ success: boolean; doctor: DoctorProfile }>(`/api/doctors/${doctorId}`),
+      apiRequest<{ success: boolean; availability?: AvailabilitySlot[] }>(`/api/doctors/${doctorId}/availability`),
     ])
       .then(([doctorData, availData]) => {
-        if (!doctorData.success) { setError(doctorData.message || 'Doctor not found.'); return; }
+        if (!doctorData.success) { setError('Doctor not found.'); return; }
         setDoctor(doctorData.doctor);
         if (availData.success) {
           setAvailability((availData.availability || []).filter((s: AvailabilitySlot) => s.status));
         }
       })
-      .catch(() => setError('Unable to load doctor profile.'))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load doctor profile.'))
       .finally(() => setLoading(false));
   }, [doctorId]);
 

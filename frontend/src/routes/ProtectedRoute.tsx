@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { clearStoredSession } from '../services/api';
 
 type ProtectedRouteProps = {
 	allowedRoles?: string[];
@@ -15,7 +16,16 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
 		}
 	})();
 
-	if (!token) {
+	const isExpired = (() => {
+		if (!token) return false;
+		try {
+			const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+			return typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now();
+		} catch { return false; }
+	})();
+
+	if (!token || isExpired) {
+		if (isExpired) clearStoredSession();
 		return <Navigate to="/login" replace state={{ from: location }} />;
 	}
 

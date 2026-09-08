@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import { apiRequest } from '../../services/api';
 
 type DoctorProfile = {
   name: string;
@@ -40,17 +41,12 @@ export function DoctorProfilePage() {
 
     async function loadProfile() {
       try {
-        const response = await fetch('/api/doctor/profile', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('sc_token') || ''}` }
-        });
-        const result = await response.json();
-        if (response.ok && result.success) {
+        const result = await apiRequest<{ success: boolean; profile: Partial<DoctorProfile> }>('/api/doctor/profile');
+        if (result.success) {
           setProfile((current) => ({ ...current, ...result.profile, specialization: result.profile.specialization || '', clinic: result.profile.clinic || '', qualifications: result.profile.qualifications || '', bio: result.profile.bio || '', experience: result.profile.experience?.toString() || '', consultationFee: result.profile.consultationFee?.toString() || '' }));
-        } else if (response.status !== 404) {
-          setNotice({ type: 'error', text: result.message || 'Unable to load your profile.' });
         }
-      } catch {
-        setNotice({ type: 'error', text: 'Unable to reach the profile service. You can still complete the form.' });
+      } catch (err) {
+        setNotice({ type: 'error', text: err instanceof Error ? err.message : 'Unable to load your profile.' });
       } finally {
         setLoading(false);
       }
@@ -80,13 +76,10 @@ export function DoctorProfilePage() {
     setSaving(true);
     setNotice({ type: '', text: '' });
     try {
-      const response = await fetch('/api/doctor/profile', {
+      await apiRequest('/api/doctor/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('sc_token') || ''}` },
         body: JSON.stringify({ ...profile, experience: profile.experience ? Number(profile.experience) : null, consultationFee: profile.consultationFee ? Number(profile.consultationFee) : null })
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || 'Failed to save profile.');
       localStorage.setItem('sc_user', JSON.stringify({ ...JSON.parse(localStorage.getItem('sc_user') || '{}'), name: profile.name }));
       setNotice({ type: 'success', text: 'Doctor profile updated successfully.' });
     } catch (error) {

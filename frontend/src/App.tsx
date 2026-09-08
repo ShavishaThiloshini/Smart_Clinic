@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useNavigate } from 'react-router-dom';
 import logo from './assets/images/logo.png';
 import { AppRouter } from './routes/AppRouter';
+function SessionExpiryHandler() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handleExpiry = () => navigate('/login', { replace: true, state: { sessionExpired: true } });
+    window.addEventListener('sc:auth-expired', handleExpiry);
+    return () => window.removeEventListener('sc:auth-expired', handleExpiry);
+  }, [navigate]);
+  return null;
+}
 function LoadingScreen() {
   return <main className="loading-scene" aria-label="Loading Smart Clinic">
     <div className="loading-orb orb-one" /><div className="loading-orb orb-two" />
@@ -24,6 +33,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <SessionExpiryHandler />
       <AppRouter />
     </BrowserRouter>
   );
