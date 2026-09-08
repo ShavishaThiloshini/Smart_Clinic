@@ -3,6 +3,7 @@ import { AdminRoute } from './AdminRoute';
 import { DoctorRoute } from './DoctorRoute';
 import { PatientRoute } from './PatientRoute';
 import { AdminDashboard } from '../pages/admin/AdminDashboard';
+import { ReportsPage } from '../pages/admin/ReportsPage';
 import { UserManagementPage } from '../pages/admin/UserManagementPage';
 import { DoctorManagementPage } from '../pages/admin/DoctorManagementPage';
 import { AvailabilityPage } from '../pages/doctor/AvailabilityPage';
@@ -52,6 +53,7 @@ export function AppRouter() {
 
 			<Route element={<AdminRoute />}>
 				<Route path="/admin/dashboard" element={<AdminDashboard />} />
+				<Route path="/admin/reports" element={<ReportsPage />} />
 				<Route path="/admin/users" element={<UserManagementPage />} />
 				<Route path="/admin/doctors" element={<DoctorManagementPage />} />
 			</Route>
