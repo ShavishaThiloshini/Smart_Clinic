@@ -4,6 +4,7 @@ const express = require('express');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getDashboard,
+  getReports,
   getUsers,
   getUserById,
   updateUserStatus,
@@ -24,6 +25,7 @@ const {
  *
  * Endpoints:
  *   GET /api/admin/dashboard  — system-wide stats
+ *   GET /api/admin/reports?from=YYYY-MM-DD&to=YYYY-MM-DD — operational report
  *   GET /api/admin/users
  *   GET /api/admin/users/:userId
  *   PUT /api/admin/users/:userId/status
@@ -39,6 +41,7 @@ function createAdminRouter() {
 
   // Dashboard
   router.get('/dashboard', getDashboard);
+  router.get('/reports', getReports);
   router.get('/users', getUsers);
   router.get('/users/:userId', getUserById);
   router.patch('/users/:userId/status', updateUserStatus);

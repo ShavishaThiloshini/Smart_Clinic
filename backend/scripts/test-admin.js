@@ -69,6 +69,18 @@ async function run() {
   }
 
   {
+    const report = await request('GET', '/api/admin/reports?from=2025-01-01&to=2025-12-31', { token: adminToken });
+    assert('Admin can access reports -> 200', report.status === 200, JSON.stringify(report.json));
+    assert('Reports response identifies the period', report.json?.report?.period?.from === '2025-01-01' && report.json?.report?.period?.to === '2025-12-31', JSON.stringify(report.json));
+    assert('Reports response contains operational breakdowns', Array.isArray(report.json?.report?.appointmentTrend) && Array.isArray(report.json?.report?.usersByRole) && Array.isArray(report.json?.report?.doctorsByApproval), JSON.stringify(report.json));
+
+    const unauthenticated = await request('GET', '/api/admin/reports');
+    assert('Reports without token -> 401', unauthenticated.status === 401, JSON.stringify(unauthenticated.json));
+    const forbidden = await request('GET', '/api/admin/reports', { token: patientToken });
+    assert('Patient cannot access reports -> 403', forbidden.status === 403, JSON.stringify(forbidden.json));
+  }
+
+  {
     const users = await request('GET', '/api/admin/users', { token: patientToken });
     const doctors = await request('GET', '/api/admin/doctors', { token: patientToken });
     assert('Patient cannot list users -> 403', users.status === 403, JSON.stringify(users.json));
@@ -86,6 +98,11 @@ async function run() {
       body: { approvalStatus: 'unknown' }
     });
     assert('Invalid doctor approval is rejected -> 422', approval.status === 422);
+    const invalidReport = await request('GET', '/api/admin/reports?from=not-a-date', { token: adminToken });
+    assert('Invalid report date is rejected -> 422', invalidReport.status === 422, JSON.stringify(invalidReport.json));
+
+    const reversedReport = await request('GET', '/api/admin/reports?from=2025-12-31&to=2025-01-01', { token: adminToken });
+    assert('Reversed report date range is rejected -> 422', reversedReport.status === 422, JSON.stringify(reversedReport.json));
   }
 
   if (printSummary() > 0) process.exit(1);

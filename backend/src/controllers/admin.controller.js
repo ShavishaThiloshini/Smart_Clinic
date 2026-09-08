@@ -5,6 +5,17 @@ const { pool } = require('../config/db');
 const USER_STATUSES = ['active', 'suspended', 'disabled'];
 const DOCTOR_APPROVAL_STATUSES = ['pending', 'approved', 'rejected'];
 
+function parseReportDate(value, fallback) {
+  if (value === undefined || value === '') return fallback;
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value ? null : value;
+}
+
+function toNumber(value) {
+  return Number(value || 0);
+}
+
 /**
  * GET /api/admin/dashboard
  *
@@ -40,6 +51,60 @@ async function getDashboard(req, res, next) {
     });
   } catch (err) {
     next(err);
+  }
+}
+
+async function getReports(req, res, next) {
+  const today = new Date().toISOString().slice(0, 10);
+  const defaultFrom = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const from = parseReportDate(req.query.from, defaultFrom);
+  const to = parseReportDate(req.query.to, today);
+
+  if (!from || !to) {
+    return res.status(422).json({ success: false, message: 'from and to must be valid dates in YYYY-MM-DD format.' });
+  }
+  if (from > to) {
+    return res.status(422).json({ success: false, message: 'from must be on or before to.' });
+  }
+
+  try {
+    const [summaryRows, appointmentTrend, usersByRole, usersByStatus, doctorsByApproval] = await Promise.all([
+      pool.query(`
+        SELECT COUNT(*) AS totalAppointments,
+               SUM(status = 'pending') AS pendingAppointments,
+               SUM(status = 'confirmed') AS confirmedAppointments,
+               SUM(status = 'completed') AS completedAppointments,
+               SUM(status = 'cancelled') AS cancelledAppointments,
+               SUM(status = 'no-show') AS noShowAppointments
+        FROM appointments
+        WHERE appointment_date BETWEEN ? AND ?`, [from, to]),
+      pool.query(`
+        SELECT appointment_date AS date, status, COUNT(*) AS count
+        FROM appointments
+        WHERE appointment_date BETWEEN ? AND ?
+        GROUP BY appointment_date, status
+        ORDER BY appointment_date ASC, status ASC`, [from, to]),
+      pool.query(`SELECT role, COUNT(*) AS count FROM users GROUP BY role ORDER BY role`),
+      pool.query(`SELECT status, COUNT(*) AS count FROM users GROUP BY status ORDER BY status`),
+      pool.query(`SELECT approval_status AS approvalStatus, COUNT(*) AS count FROM doctors GROUP BY approval_status ORDER BY approval_status`)
+    ]);
+
+    const [summary] = summaryRows;
+    return res.json({
+      success: true,
+      message: 'Admin report data.',
+      requestedBy: { userId: req.user.userId, role: req.user.role },
+      report: {
+        period: { from, to },
+        summary: Object.fromEntries(Object.entries(summary[0]).map(([key, value]) => [key, toNumber(value)])),
+        appointmentTrend: appointmentTrend[0].map((row) => ({ date: row.date, status: row.status, count: toNumber(row.count) })),
+        usersByRole: usersByRole[0].map((row) => ({ role: row.role, count: toNumber(row.count) })),
+        usersByStatus: usersByStatus[0].map((row) => ({ status: row.status, count: toNumber(row.count) })),
+        doctorsByApproval: doctorsByApproval[0].map((row) => ({ approvalStatus: row.approvalStatus, count: toNumber(row.count) }))
+      }
+    });
+  } catch (error) {
+    next(error);
   }
 }
 
@@ -171,6 +236,7 @@ async function getDoctorById(req, res, next) {
 
 module.exports = {
   getDashboard,
+  getReports,
   getUsers,
   getUserById,
   updateUserStatus,
