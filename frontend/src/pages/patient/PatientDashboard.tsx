@@ -95,7 +95,7 @@ export function PatientDashboard() {
                 <span>◴ <strong>10:30 AM – 11:00 AM</strong></span>
                 <span>⌖ <strong>Consultation Room 03</strong></span>
               </div>
-              <div className="appointment-actions"><button type="button" className="secondary-action">Reschedule</button><button type="button" className="primary-action">View appointment</button></div>
+              <div className="appointment-actions"><button type="button" className="secondary-action" onClick={() => navigate('/patient/appointments')}>Reschedule</button><button type="button" className="primary-action" onClick={() => navigate('/patient/appointments')}>View appointment</button></div>
             </article>
 
             <article className="care-tip-card">
@@ -103,7 +103,7 @@ export function PatientDashboard() {
               <p className="section-kicker">CARE REMINDER</p>
               <h2>Prepare for your visit</h2>
               <p>Bring any recent reports and a list of medicines you are taking.</p>
-              <button type="button">Learn more →</button>
+              <button type="button" onClick={() => navigate('/patient/medical-records')}>Learn more →</button>
             </article>
           </section>
 
@@ -113,7 +113,7 @@ export function PatientDashboard() {
             <button type="button" className="quick-card" onClick={() => navigate('/patient/prescriptions')}><span className="quick-icon purple">▱</span><strong>Prescriptions</strong><small>See your prescribed medicines</small><i>→</i></button>
           </div></section>
 
-          <section className="activity-section"><div className="section-title"><div><p className="section-kicker">RECENT ACTIVITY</p><h2>Updates for you</h2></div><button type="button">View all</button></div><div className="activity-list">
+          <section className="activity-section"><div className="section-title"><div><p className="section-kicker">RECENT ACTIVITY</p><h2>Updates for you</h2></div><button type="button" onClick={() => navigate('/patient/notifications')}>View all</button></div><div className="activity-list">
             <div className="activity-item"><span className="activity-dot blue" /><div><strong>Your appointment is confirmed</strong><p>Dr. S. Perera · Wednesday at 10:30 AM</p></div><time>Today</time></div>
             <div className="activity-item"><span className="activity-dot teal" /><div><strong>Welcome to Smart Clinic</strong><p>Your patient account is ready to use.</p></div><time>Today</time></div>
           </div></section>

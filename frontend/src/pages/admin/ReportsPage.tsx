@@ -10,14 +10,7 @@ const navigation = [
 	{ label: 'Dashboard', icon: '⌂', path: '/admin/dashboard' },
 	{ label: 'Users', icon: '👥', path: '/admin/users' },
 	{ label: 'Doctors', icon: '👨‍⚕️', path: '/admin/doctors' },
-	{ label: 'Specializations', icon: '⚕️', path: '/admin/specializations' },
-	{ label: 'Clinics', icon: '🏥', path: '/admin/clinics' },
-	{ label: 'Schedules', icon: '📅', path: '/admin/schedules' },
-	{ label: 'Appointments', icon: '▣', path: '/admin/appointments' },
-	{ label: 'Reviews', icon: '★', path: '/admin/reviews' },
 	{ label: 'Reports', icon: '📊', path: '/admin/reports' },
-	{ label: 'Audit Logs', icon: '📝', path: '/admin/logs' },
-	{ label: 'Settings', icon: '⚙️', path: '/admin/settings' }
 ];
 
 export function ReportsPage() {

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRouter } from './AppRouter';
@@ -55,18 +55,19 @@ describe('AppRouter', () => {
     expect(screen.getByRole('heading', { name: /Good morning, Sample\./i })).toBeInTheDocument();
   });
 
-  it('renders the medical records page for authenticated patients', () => {
+  it('renders the medical records page for authenticated patients', async () => {
     localStorage.setItem('sc_token', 'demo-token');
     localStorage.setItem('sc_user', JSON.stringify({ name: 'Sample Patient', role: 'patient' }));
 
     vi.stubGlobal('fetch', vi.fn((input: unknown) => {
       const url = String(input);
       if (url.includes('/api/patient/profile')) {
-        return Promise.resolve({ ok: true, json: async () => ({ success: true, profile: { patientId: 42 } }) });
+        return Promise.resolve({ ok: true, headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({ success: true, profile: { patientId: 42 } }) });
       }
       if (url.includes('/api/medical-records/patient/42')) {
         return Promise.resolve({
           ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
           json: async () => ({
             success: true,
             records: [{
@@ -80,7 +81,7 @@ describe('AppRouter', () => {
           })
         });
       }
-      return Promise.resolve({ ok: true, json: async () => ({ success: true, count: 0 }) });
+      return Promise.resolve({ ok: true, headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({ success: true, count: 0 }) });
     }));
 
     render(
@@ -90,5 +91,6 @@ describe('AppRouter', () => {
     );
 
     expect(screen.getByRole('heading', { name: /Your medical records/i, level: 1 })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Routine follow-up')).toBeInTheDocument());
   });
 });
