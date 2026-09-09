@@ -47,3 +47,13 @@ Date: 2026-08-24
 `src/controllers/doctor.controller.js` now updates the stored name when an existing clinic or specialization is matched case-insensitively. This preserves the requested canonical spelling without creating duplicate rows.
 
 No commit was created.
+
+## Day 27 Full Integration Runner
+
+The complete cross-module integration command is:
+
+```bash
+npm run test:day27
+```
+
+It requires a running backend with MySQL available. The runner executes all validation and API suites, then verifies required tables, orphan records, and duplicate appointment slots. A failed health check, database connection, suite, or integrity check returns a non-zero exit code.

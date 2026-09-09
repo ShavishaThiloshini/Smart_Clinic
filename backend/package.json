@@ -28,7 +28,8 @@
     "test:admin": "node scripts/test-admin.js",
     "test:milestone3": "node scripts/test-milestone3.js",
     "test:milestone1": "node scripts/test-milestone1.js",
-    "test:day10": "node scripts/test-milestone1.js"
+    "test:day10": "node scripts/test-milestone1.js",
+    "test:day27": "node scripts/test-day27.js"
   },
   "keywords": [
     "clinic",

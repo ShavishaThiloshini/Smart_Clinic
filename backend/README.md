@@ -119,3 +119,13 @@ The endpoint requires an admin JWT. Verify the Day 23 API structure with:
 ```bash
 npm run test:admin
 ```
+
+## Full Day 27 integration test
+
+With MySQL initialized and the backend running, execute the complete API and database integration pass:
+
+```bash
+npm run test:day27
+```
+
+The runner executes validation, authentication, profile, search, availability, appointment, medical record, prescription, review, notification, and admin suites. It also verifies the required tables and checks for orphan records and duplicate appointment slots.
