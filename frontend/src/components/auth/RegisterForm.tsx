@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { RegisterFormState } from '../../types/auth.types';
+import { isValidEmail, validatePassword } from '../../utils/validators';
 
 interface Props { onSubmit: (data: RegisterFormState) => void; isLoading?: boolean; error?: string; }
 
@@ -10,6 +11,9 @@ export function RegisterForm({ onSubmit, isLoading = false, error }: Props) {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!form.name || !form.email || !form.password) return setMessage('Please complete all required fields.');
+    if (!isValidEmail(form.email)) return setMessage('Enter a valid email address.');
+    const passwordError = validatePassword(form.password);
+    if (passwordError) return setMessage(passwordError);
     if (form.password !== form.confirmPassword) return setMessage('Passwords do not match.');
     if (!form.agreeToTerms) return setMessage('Please accept the terms to continue.');
     setMessage(''); onSubmit(form);

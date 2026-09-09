@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
+import { apiRequest } from '../../services/api';
 import {
   EmergencyContact,
   HealthSummaryCard,
@@ -45,15 +46,8 @@ export function PatientProfilePage() {
 
   async function fetchProfile() {
     try {
-      const token = localStorage.getItem('sc_token');
-      const res = await fetch('/api/patient/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      const json = await res.json();
-      if (res.ok && json.success) {
+      const json = await apiRequest<{ success: boolean; profile: Record<string, string> }>('/api/patient/profile');
+      if (json.success) {
         const loadedProfile = {
           ...json.profile,
           dateOfBirth: json.profile.dateOfBirth ? json.profile.dateOfBirth.split('T')[0] : ''
@@ -61,11 +55,10 @@ export function PatientProfilePage() {
         setProfile(loadedProfile);
         setFormData(loadedProfile);
       } else {
-        setMessage({ type: 'error', text: json.message || 'Unable to load profile data right now.' });
+        setMessage({ type: 'error', text: 'Unable to load profile data right now.' });
       }
     } catch (err) {
-      console.error('Failed to load profile', err);
-      setMessage({ type: 'error', text: 'Unable to load profile data right now.' });
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Unable to load profile data right now.' });
     } finally {
       setIsLoading(false);
     }
@@ -75,34 +68,25 @@ export function PatientProfilePage() {
     e.preventDefault();
     setIsSaving(true);
     setMessage({ type: '', text: '' });
+    if (!formData.name?.trim()) {
+      setMessage({ type: 'error', text: 'Full name is required.' });
+      setIsSaving(false);
+      return;
+    }
     
     try {
-      const token = localStorage.getItem('sc_token');
-      const res = await fetch('/api/patient/profile', {
+      await apiRequest('/api/patient/profile', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(formData)
       });
-      
-      const json = await res.json();
-      
-      if (res.ok) {
-        setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        setProfile(formData);
-        setIsEditing(false);
-        
-        // Update local storage name if it changed
-        const savedUser = JSON.parse(localStorage.getItem('sc_user') || '{}');
-        savedUser.name = formData.name;
-        localStorage.setItem('sc_user', JSON.stringify(savedUser));
-      } else {
-        setMessage({ type: 'error', text: json.message || 'Failed to update profile.' });
-      }
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setProfile(formData);
+      setIsEditing(false);
+      const savedUser = JSON.parse(localStorage.getItem('sc_user') || '{}');
+      savedUser.name = formData.name;
+      localStorage.setItem('sc_user', JSON.stringify(savedUser));
     } catch (err) {
-      setMessage({ type: 'error', text: 'Network error. Please try again later.' });
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Unable to update profile. Please try again.' });
     } finally {
       setIsSaving(false);
     }

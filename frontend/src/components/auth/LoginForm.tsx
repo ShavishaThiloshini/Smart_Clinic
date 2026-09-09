@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { LoginFormState } from '../../types/auth.types';
+import { isValidEmail } from '../../utils/validators';
 
 interface Props { onSubmit: (data: LoginFormState) => void; isLoading?: boolean; error?: string; }
 
@@ -11,6 +12,7 @@ export function LoginForm({ onSubmit, isLoading = false, error }: Props) {
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!form.email || !form.password) return setMessage('Please enter your email and password.');
+    if (!isValidEmail(form.email)) return setMessage('Enter a valid email address.');
     setMessage(''); onSubmit(form);
   }
 

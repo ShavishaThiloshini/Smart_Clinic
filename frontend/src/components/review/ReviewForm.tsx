@@ -56,6 +56,7 @@ export function ReviewForm({ appointmentId, doctorName, date, onSubmit, onCancel
               id="comment"
               value={comment}
               onChange={e => setComment(e.target.value)}
+              maxLength={2000}
               placeholder="Tell us about your visit..."
               rows={4}
               style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc', fontFamily: 'inherit', resize: 'vertical' }}

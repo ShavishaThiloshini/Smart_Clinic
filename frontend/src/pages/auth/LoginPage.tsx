@@ -1,31 +1,32 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { LoginForm } from '../../components/auth/LoginForm';
 import { LoginFormState } from '../../types/auth.types';
 import logo from '../../assets/images/logo.png';
+import { apiRequest } from '../../services/api';
 
 export function LoginPage() {
   const [error, setError]       = useState('');
   const [isLoading, setLoading] = useState(false);
   const navigate                = useNavigate();
+  const location                = useLocation();
+
+  useEffect(() => {
+    if (location.state?.sessionExpired) setError('Your session expired. Please sign in again.');
+  }, [location.state]);
 
   async function login(data: LoginFormState) {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const json = await apiRequest<{ token: string; user: { role?: string } }>('/api/auth/login', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email: data.email, password: data.password }),
-      });
-      const json = await res.json();
-
-      if (!res.ok) {
-        setError(json.message || 'Login failed. Please try again.');
-        return;
-      }
+      }, false);
 
       // Store token + user in localStorage
+      if (!json.token || !json.user?.role) throw new Error('The sign-in response was incomplete. Please try again.');
       localStorage.setItem('sc_token', json.token);
       localStorage.setItem('sc_user',  JSON.stringify(json.user));
 
@@ -35,8 +36,8 @@ export function LoginPage() {
       else if (role === 'doctor') navigate('/doctor/dashboard', { replace: true });
       else                    navigate('/patient/dashboard', { replace: true });
 
-    } catch {
-      setError('Unable to reach the server. Please check your connection.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
