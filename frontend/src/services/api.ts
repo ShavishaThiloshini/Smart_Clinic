@@ -7,6 +7,7 @@ export class ApiError extends Error {
 
 const TOKEN_KEY = 'sc_token';
 const USER_KEY = 'sc_user';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export function clearStoredSession() {
   localStorage.removeItem(TOKEN_KEY);
@@ -34,7 +35,7 @@ export async function apiRequest<T>(url: string, options: RequestInit = {}, auth
   if (authenticated && token) headers.set('Authorization', `Bearer ${token}`);
   if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   let response: Response;
-  try { response = await fetch(url, { ...options, headers }); }
+  try { response = await fetch(`${API_BASE_URL}${url}`, { ...options, headers }); }
   catch { throw new ApiError('Unable to reach the server. Please check your connection and try again.'); }
   const data = await readJson(response).catch(() => null);
   if (!response.ok) {

@@ -15,8 +15,11 @@ const { createNotificationRouter } = require('./routes/notification');
 const { createReviewRouter } = require('./routes/review');
 
 const app = express();
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : null;
 
-app.use(cors());
+app.use(cors(allowedOrigins ? { origin: allowedOrigins } : undefined));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

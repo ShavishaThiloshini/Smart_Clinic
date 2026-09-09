@@ -46,16 +46,20 @@ Expected areas include:
 
 ## 🗂️ Project Documentation
 
-The project's planning and technical documentation is maintained in the `docs` directory.
+The project's planning and technical documentation is maintained in the `document` directory.
 
 | Document | Description |
 |---|---|
-| [Project Requirement Document](docs/PRD.md) | Defines the project requirements, goals, users, and functional expectations. |
-| [Technical Requirement Document](docs/TRD.md) | Defines the technical architecture, technologies, and development requirements. |
-| [App Flow Document](docs/APP_FLOW.md) | Describes the application's navigation and user flows. |
-| [UI/UX Design Brief](docs/UI_UX_DESIGN.md) | Defines the visual direction, user experience, and interface requirements. |
-| [Backend Schema Document](docs/BACKEND_SCHEMA.md) | Defines the database structure and backend data relationships. |
-| [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) | Defines the development phases, tasks, and implementation sequence. |
+| [Project Requirement Document](document/PRD.md) | Defines the project requirements, goals, users, and functional expectations. |
+| [Technical Requirement Document](document/TRD.md) | Defines the technical architecture, technologies, and development requirements. |
+| [App Flow Document](document/AddFlow.md) | Describes the application's navigation and user flows. |
+| [UI/UX Design Brief](document/UIUXDesignBrief.md) | Defines the visual direction, user experience, and interface requirements. |
+| [Backend Schema Document](document/BackendSchema.md) | Defines the database structure and backend data relationships. |
+| [Implementation Plan](document/ImplementationPlan.md) | Defines the development phases, tasks, and implementation sequence. |
+
+## Deployment
+
+See [document/DeploymentGuide.md](document/DeploymentGuide.md) for the production build, environment variables, database initialization, health check, and final release verification steps.
 
 ---
 
