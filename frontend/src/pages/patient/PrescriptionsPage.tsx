@@ -5,6 +5,7 @@ import { usePrescriptions } from '../../hooks/usePrescriptions';
 import { PrescriptionTable } from '../../components/prescription/PrescriptionTable';
 import { PrescriptionCard } from '../../components/prescription/PrescriptionCard';
 import type { Prescription } from '../../types/prescription.types';
+import { apiRequest } from '../../services/api';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -19,21 +20,40 @@ export function PrescriptionsPage() {
   const navigate = useNavigate();
   const { prescriptions, loading, error, fetchPatientPrescriptions } = usePrescriptions();
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
+  const [patientId, setPatientId] = useState<number | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  const patientInfo = useMemo(() => {
+  const patientName = useMemo(() => {
     try {
       const savedUser = JSON.parse(localStorage.getItem('sc_user') || '{}');
-      return { id: savedUser.patientId || null, name: savedUser.name || 'Patient' };
+      return savedUser.name || 'Patient';
     } catch {
-      return { id: null, name: 'Patient' };
+      return 'Patient';
     }
   }, []);
 
   useEffect(() => {
-    if (patientInfo.id) {
-      fetchPatientPrescriptions(patientInfo.id);
+    async function loadPatientProfile() {
+      try {
+        const profileJson = await apiRequest<{ success: boolean; profile?: { patientId?: number } }>('/api/patient/profile');
+        if (profileJson?.success && profileJson?.profile?.patientId) {
+          setPatientId(profileJson.profile.patientId);
+        }
+      } catch (err) {
+        console.error('Failed to load patient profile', err);
+      } finally {
+        setProfileLoading(false);
+      }
     }
-  }, [patientInfo.id, fetchPatientPrescriptions]);
+
+    loadPatientProfile();
+  }, []);
+
+  useEffect(() => {
+    if (patientId) {
+      fetchPatientPrescriptions(patientId);
+    }
+  }, [patientId, fetchPatientPrescriptions]);
 
   function logout() {
     localStorage.removeItem('sc_token');
@@ -72,7 +92,7 @@ export function PrescriptionsPage() {
             onClick={() => navigate('/patient/profile')}
             title="View Profile"
           >
-            {patientInfo.name.charAt(0).toUpperCase()}
+            {patientName.charAt(0).toUpperCase()}
           </div>
         </header>
 
@@ -86,13 +106,27 @@ export function PrescriptionsPage() {
           </section>
 
           <section className="records-section">
-            <PrescriptionTable 
-              prescriptions={prescriptions} 
-              loading={loading} 
-              error={error} 
-              onPrescriptionClick={(record) => setSelectedPrescription(record)}
-            />
+            {profileLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 2rem', color: '#666' }}>
+                <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #0066cc', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginBottom: '1rem' }} />
+                <p>Loading your prescriptions...</p>
+              </div>
+            ) : (
+              <PrescriptionTable 
+                prescriptions={prescriptions} 
+                loading={loading} 
+                error={error} 
+                onPrescriptionClick={(record) => setSelectedPrescription(record)}
+              />
+            )}
           </section>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
         </div>
       </section>
 

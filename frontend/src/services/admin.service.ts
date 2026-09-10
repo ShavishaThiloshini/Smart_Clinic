@@ -2,7 +2,8 @@ import type { AdminDashboardStats, ReportData, AdminDoctor, AdminUser } from '..
 import { apiRequest } from './api';
 
 export async function getDashboardStats(): Promise<AdminDashboardStats> {
-	const data = await apiRequest<{ stats: AdminDashboardStats }>('/api/admin/dashboard');
+	const data = await apiRequest<{ success: boolean; stats: AdminDashboardStats }>('/api/admin/dashboard');
+	if (!data.success) throw new Error('Failed to load dashboard stats');
 	return data.stats;
 }
 
@@ -14,7 +15,8 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
  */
 export async function getReportData(): Promise<ReportData> {
 	// Always fetch the dashboard stats (they are already implemented)
-	const statsData = await apiRequest<{ stats: AdminDashboardStats }>('/api/admin/dashboard');
+	const statsData = await apiRequest<{ success: boolean; stats: AdminDashboardStats }>('/api/admin/dashboard');
+	if (!statsData.success) throw new Error('Failed to load dashboard stats');
 	const summary = statsData.stats;
 
 	// Derive status breakdown from the dashboard stats we already have
@@ -60,7 +62,8 @@ export async function getReportData(): Promise<ReportData> {
 export async function getAdminUsers(filters: { q?: string; role?: string; status?: string } = {}): Promise<AdminUser[]> {
 	const params = new URLSearchParams();
 	Object.entries(filters).forEach(([key, value]) => value && params.set(key, value));
-	const data = await apiRequest<{ users: AdminUser[] }>(`/api/admin/users?${params.toString()}`);
+	const data = await apiRequest<{ success: boolean; users: AdminUser[] }>(`/api/admin/users?${params.toString()}`);
+	if (!data.success) return [];
 	return data.users || [];
 }
 
@@ -73,7 +76,8 @@ export async function updateAdminUserStatus(userId: number, status: string): Pro
 }
 
 export async function getAdminDoctors(): Promise<AdminDoctor[]> {
-	const data = await apiRequest<{ doctors: AdminDoctor[] }>('/api/admin/doctors');
+	const data = await apiRequest<{ success: boolean; doctors: AdminDoctor[] }>('/api/admin/doctors');
+	if (!data.success) return [];
 	return data.doctors || [];
 }
 

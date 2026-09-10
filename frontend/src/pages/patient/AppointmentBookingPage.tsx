@@ -147,11 +147,11 @@ export function AppointmentBookingPage() {
   useEffect(() => {
     if (!doctorId) { setInitError('Invalid doctor.'); setLoadingInit(false); return; }
     Promise.all([
-      apiRequest<{ success: boolean; doctor: DoctorSummary; message?: string }>(`/api/doctors/${doctorId}`),
+      apiRequest<{ success: boolean; doctor?: DoctorSummary; message?: string }>(`/api/doctors/${doctorId}`),
       apiRequest<{ success: boolean; availability?: AvailabilitySlot[] }>(`/api/doctors/${doctorId}/availability`),
     ])
       .then(([doctorData, availData]) => {
-        if (!doctorData.success) { setInitError(doctorData.message || 'Doctor not found.'); return; }
+        if (!doctorData.success || !doctorData.doctor) { setInitError(doctorData.message || 'Doctor not found.'); return; }
         const d = doctorData.doctor;
         setDoctor({ doctorId: d.doctorId, name: d.name, specialization: d.specialization, clinic: d.clinic, consultationFee: d.consultationFee });
         if (availData.success) {
@@ -217,7 +217,7 @@ export function AppointmentBookingPage() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const data = await apiRequest<{ appointment: unknown }>('/api/appointments', {
+      const data = await apiRequest<{ success: boolean; appointment: unknown }>('/api/appointments', {
         method: 'POST',
         body: JSON.stringify({
           doctorId: doctor.doctorId,
@@ -226,6 +226,7 @@ export function AppointmentBookingPage() {
           reason: reason.trim(),
         }),
       });
+      if (!data.success) throw new Error('Unable to book this appointment. Please try again.');
       navigate('/patient/booking-confirmation', { state: { appointment: data.appointment } });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Unable to book this appointment. Please try again.');

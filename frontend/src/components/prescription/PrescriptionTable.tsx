@@ -94,6 +94,26 @@ export function PrescriptionTable({ prescriptions, loading, error, onPrescriptio
           </tbody>
         </table>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .prescriptions-container {
+          width: 100%;
+          margin-top: 1.5rem;
+        }
+
+        .record-row:hover {
+          background-color: #f9f9f9;
+        }
+
+        .view-button:hover {
+          background-color: #e0efff;
+        }
+      `}</style>
     </div>
   );
 }

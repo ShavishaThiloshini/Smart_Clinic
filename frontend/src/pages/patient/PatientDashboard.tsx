@@ -1,7 +1,10 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useAppointments } from '../../hooks/useAppointments';
+import { apiRequest } from '../../services/api';
+import type { Appointment } from '../../types/appointment.types';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -16,6 +19,9 @@ const navigation = [
 export function PatientDashboard() {
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
+  const { history: appointments, loading: appointmentsLoading, fetchAppointmentHistory } = useAppointments();
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  
   const patientName = useMemo(() => {
     try {
       const savedUser = JSON.parse(localStorage.getItem('sc_user') || '{}');
@@ -24,6 +30,27 @@ export function PatientDashboard() {
       return 'Patient';
     }
   }, []);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        await fetchAppointmentHistory();
+      } catch (err) {
+        console.error('Failed to load dashboard data', err);
+      } finally {
+        setDashboardLoading(false);
+      }
+    }
+    loadDashboardData();
+  }, [fetchAppointmentHistory]);
+
+  const upcomingAppointment = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return appointments.find((apt: Appointment) => 
+      apt.appointmentDate >= today && 
+      ['pending', 'confirmed'].includes(apt.status.toLowerCase())
+    ) || null;
+  }, [appointments]);
 
   function logout() {
     localStorage.removeItem('sc_token');
@@ -84,19 +111,51 @@ export function PatientDashboard() {
           </section>
 
           <section className="dashboard-grid">
-            <article className="upcoming-card">
-              <div className="card-heading"><div><p className="section-kicker">NEXT APPOINTMENT</p><h2>Upcoming visit</h2></div><span className="status-confirmed">Confirmed</span></div>
-              <div className="appointment-summary">
-                <div className="doctor-initials">DS</div>
-                <div><h3>Dr. S. Perera</h3><p>General Medicine · Smart Clinic</p></div>
-              </div>
-              <div className="appointment-details">
-                <span>◷ <strong>Wednesday, 20 August</strong></span>
-                <span>◴ <strong>10:30 AM – 11:00 AM</strong></span>
-                <span>⌖ <strong>Consultation Room 03</strong></span>
-              </div>
-              <div className="appointment-actions"><button type="button" className="secondary-action" onClick={() => navigate('/patient/appointments')}>Reschedule</button><button type="button" className="primary-action" onClick={() => navigate('/patient/appointments')}>View appointment</button></div>
-            </article>
+            {dashboardLoading ? (
+              <article className="upcoming-card">
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', color: '#666' }}>
+                  <div style={{ width: '32px', height: '32px', border: '3px solid #f3f3f3', borderTop: '3px solid #0066cc', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginBottom: '0.75rem' }} />
+                  <p>Loading your appointments...</p>
+                </div>
+              </article>
+            ) : upcomingAppointment ? (
+              <article className="upcoming-card">
+                <div className="card-heading">
+                  <div><p className="section-kicker">NEXT APPOINTMENT</p><h2>Upcoming visit</h2></div>
+                  <span className={`status-${upcomingAppointment.status.toLowerCase()}`}>{upcomingAppointment.status}</span>
+                </div>
+                <div className="appointment-summary">
+                  <div className="doctor-initials">
+                    {upcomingAppointment.doctorName.split(' ').filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3>Dr. {upcomingAppointment.doctorName}</h3>
+                    <p>{upcomingAppointment.clinicName || 'Smart Clinic'}</p>
+                  </div>
+                </div>
+                <div className="appointment-details">
+                  <span>◷ <strong>{new Date(upcomingAppointment.appointmentDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong></span>
+                  <span>◴ <strong>{upcomingAppointment.startTime} – {upcomingAppointment.endTime}</strong></span>
+                  {upcomingAppointment.queueNumber && <span>⌖ <strong>Queue #{upcomingAppointment.queueNumber}</strong></span>}
+                </div>
+                <div className="appointment-actions">
+                  <button type="button" className="secondary-action" onClick={() => navigate('/patient/appointments')}>Reschedule</button>
+                  <button type="button" className="primary-action" onClick={() => navigate('/patient/appointments')}>View appointment</button>
+                </div>
+              </article>
+            ) : (
+              <article className="upcoming-card">
+                <div className="card-heading">
+                  <div><p className="section-kicker">NEXT APPOINTMENT</p><h2>No upcoming appointments</h2></div>
+                </div>
+                <div className="appointment-summary">
+                  <p>You don't have any scheduled appointments. Book a visit with one of our doctors.</p>
+                </div>
+                <div className="appointment-actions">
+                  <button type="button" className="primary-action" onClick={() => navigate('/patient/search')}>Find a doctor</button>
+                </div>
+              </article>
+            )}
 
             <article className="care-tip-card">
               <span className="care-tip-icon">✦</span>
@@ -114,11 +173,35 @@ export function PatientDashboard() {
           </div></section>
 
           <section className="activity-section"><div className="section-title"><div><p className="section-kicker">RECENT ACTIVITY</p><h2>Updates for you</h2></div><button type="button" onClick={() => navigate('/patient/notifications')}>View all</button></div><div className="activity-list">
-            <div className="activity-item"><span className="activity-dot blue" /><div><strong>Your appointment is confirmed</strong><p>Dr. S. Perera · Wednesday at 10:30 AM</p></div><time>Today</time></div>
-            <div className="activity-item"><span className="activity-dot teal" /><div><strong>Welcome to Smart Clinic</strong><p>Your patient account is ready to use.</p></div><time>Today</time></div>
+            {upcomingAppointment ? (
+              <div className="activity-item">
+                <span className="activity-dot blue" />
+                <div>
+                  <strong>Your appointment is {upcomingAppointment.status.toLowerCase()}</strong>
+                  <p>Dr. {upcomingAppointment.doctorName} · {new Date(upcomingAppointment.appointmentDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {upcomingAppointment.startTime}</p>
+                </div>
+                <time>Today</time>
+              </div>
+            ) : (
+              <div className="activity-item">
+                <span className="activity-dot teal" />
+                <div>
+                  <strong>Welcome to Smart Clinic</strong>
+                  <p>Your patient account is ready to use.</p>
+                </div>
+                <time>Today</time>
+              </div>
+            )}
           </div></section>
         </div>
       </section>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </main>
   );
 }

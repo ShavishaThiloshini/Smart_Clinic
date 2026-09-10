@@ -67,9 +67,9 @@ export function DoctorSearchPage() {
       if (filters.specialty.trim()) params.append('specialization', filters.specialty.trim());
       if (filters.clinicName.trim()) params.append('clinic', filters.clinicName.trim());
 
-      const data = await apiRequest<{ doctors?: Doctor[] }>(`/api/doctors?${params.toString()}`);
+      const data = await apiRequest<{ success: boolean; doctors?: Doctor[] }>(`/api/doctors?${params.toString()}`);
       
-      setDoctors(data.doctors || []);
+      setDoctors(data.success ? (data.doctors || []) : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load doctors. Please try again.');
     } finally {

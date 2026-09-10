@@ -46,8 +46,8 @@ export function PatientProfilePage() {
 
   async function fetchProfile() {
     try {
-      const json = await apiRequest<{ success: boolean; profile: Record<string, string> }>('/api/patient/profile');
-      if (json.success) {
+      const json = await apiRequest<{ success: boolean; profile?: Record<string, string> }>('/api/patient/profile');
+      if (json.success && json.profile) {
         const loadedProfile = {
           ...json.profile,
           dateOfBirth: json.profile.dateOfBirth ? json.profile.dateOfBirth.split('T')[0] : ''
@@ -75,10 +75,11 @@ export function PatientProfilePage() {
     }
     
     try {
-      await apiRequest('/api/patient/profile', {
+      const result = await apiRequest<{ success: boolean; message?: string }>(`/api/patient/profile`, {
         method: 'PUT',
         body: JSON.stringify(formData)
       });
+      if (!result.success) throw new Error(result.message || 'Unable to update profile.');
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setProfile(formData);
       setIsEditing(false);
