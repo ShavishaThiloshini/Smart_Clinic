@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
-import { apiRequest } from '../../services/api';
+import { getPatientProfile, updatePatientProfile } from '../../services/patient.service';
 import {
   EmergencyContact,
   HealthSummaryCard,
@@ -46,11 +46,12 @@ export function PatientProfilePage() {
 
   async function fetchProfile() {
     try {
-      const json = await apiRequest<{ success: boolean; profile?: Record<string, string> }>('/api/patient/profile');
+      const json = await getPatientProfile();
       if (json.success && json.profile) {
+        const { patientId: _patientId, ...profileData } = json.profile;
         const loadedProfile = {
-          ...json.profile,
-          dateOfBirth: json.profile.dateOfBirth ? json.profile.dateOfBirth.split('T')[0] : ''
+          ...Object.fromEntries(Object.entries(profileData).map(([key, value]) => [key, value || ''])),
+          dateOfBirth: profileData.dateOfBirth ? profileData.dateOfBirth.split('T')[0] : ''
         };
         setProfile(loadedProfile);
         setFormData(loadedProfile);
@@ -75,10 +76,7 @@ export function PatientProfilePage() {
     }
     
     try {
-      const result = await apiRequest<{ success: boolean; message?: string }>(`/api/patient/profile`, {
-        method: 'PUT',
-        body: JSON.stringify(formData)
-      });
+      const result = await updatePatientProfile(formData);
       if (!result.success) throw new Error(result.message || 'Unable to update profile.');
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setProfile(formData);

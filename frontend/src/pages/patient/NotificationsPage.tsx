@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -11,10 +11,9 @@ const navigation = [
   { label: 'My appointments', icon: '▣', path: '/patient/appointments' },
   { label: 'Medical records', icon: '▤', path: '/patient/medical-records' },
   { label: 'Prescriptions', icon: '▱', path: '/patient/prescriptions' },
-  { label: 'Reviews', icon: '★', path: '/patient/reviews' }
+  { label: 'Reviews', icon: '★', path: '/patient/reviews' },
+  { label: 'Notifications', icon: '◌', path: '/patient/notifications' }
 ];
-
-navigation.push({ label: 'Notifications', icon: '◌', path: '/patient/notifications' });
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -39,6 +38,7 @@ function getIconForType(type: string) {
 export function NotificationsPage() {
   const navigate = useNavigate();
   const { notifications, unreadCount, loading, error, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const patientName = useMemo(() => {
     try {
@@ -57,6 +57,15 @@ export function NotificationsPage() {
     localStorage.removeItem('sc_token');
     localStorage.removeItem('sc_user');
     navigate('/login', { replace: true });
+  }
+
+  function toggleMobileMenu() {
+    setMobileMenuOpen(prev => !prev);
+  }
+
+  function handleNavigation(path: string) {
+    setMobileMenuOpen(false);
+    navigate(path);
   }
 
   return (
@@ -80,12 +89,12 @@ export function NotificationsPage() {
 
       <section className="patient-content">
         <header className="patient-header">
-          <button className="mobile-menu" type="button" aria-label="Open navigation">☰</button>
+          <button className="mobile-menu" type="button" aria-label="Open navigation" onClick={toggleMobileMenu}>☰</button>
           <div className="patient-header-spacer" />
           <button className="notification-button active" type="button" aria-label="Notifications">♧<span /></button>
-          <div 
-            className="patient-avatar" 
-            aria-hidden="true" 
+          <div
+            className="patient-avatar"
+            aria-hidden="true"
             style={{ cursor: 'pointer' }}
             onClick={() => navigate('/patient/profile')}
             title="View Profile"
@@ -93,6 +102,23 @@ export function NotificationsPage() {
             {patientName.charAt(0).toUpperCase()}
           </div>
         </header>
+
+        {mobileMenuOpen && (
+          <div className="mobile-menu-overlay" onClick={toggleMobileMenu}>
+            <nav className="mobile-menu-nav" onClick={(e) => e.stopPropagation()}>
+              {navigation.map((nav) => (
+                <button
+                  key={nav.label}
+                  type="button"
+                  onClick={() => handleNavigation(nav.path)}
+                >
+                  <span aria-hidden="true">{nav.icon}</span>{nav.label}
+                </button>
+              ))}
+              <button type="button" onClick={logout}>↪ Sign out</button>
+            </nav>
+          </div>
+        )}
 
         <div className="patient-page">
           <section className="patient-welcome" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -171,6 +197,77 @@ export function NotificationsPage() {
               </div>
             )}
           </section>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #0066cc;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        .mobile-menu-overlay {
+          position: fixed;
+          top: 76px;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1000;
+        }
+
+        .mobile-menu-nav {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 280px;
+          height: 100%;
+          background: #101d40;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .mobile-menu-nav button {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          width: 100%;
+          border: 0;
+          border-radius: 10px;
+          padding: 12px 14px;
+          background: transparent;
+          color: #b8c7e8;
+          font: 600 0.9rem inherit;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .mobile-menu-nav button:hover {
+          background: #2c4683;
+          color: #fff;
+        }
+
+        .mobile-menu-nav button span {
+          width: 17px;
+          font-size: 1.17rem;
+          text-align: center;
+        }
+
+        @media (min-width: 769px) {
+          .mobile-menu-overlay {
+            display: none;
+          }
+        }
+      `}</style>
         </div>
       </section>
     </main>

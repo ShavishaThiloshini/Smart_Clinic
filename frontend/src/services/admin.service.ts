@@ -1,4 +1,4 @@
-import type { AdminDashboardStats, ReportData, AdminDoctor, AdminUser } from '../types/admin.types';
+import type { AdminDashboardStats, ReportData, AdminDoctor, AdminUser, AppointmentStatusBreakdown, AppointmentTrend } from '../types/admin.types';
 import { apiRequest } from './api';
 
 export async function getDashboardStats(): Promise<AdminDashboardStats> {
@@ -14,45 +14,67 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
  * Falls back gracefully so the UI is always usable.
  */
 export async function getReportData(): Promise<ReportData> {
-	// Always fetch the dashboard stats (they are already implemented)
+	// The dashboard supplies the cross-system totals used by the summary cards.
 	const statsData = await apiRequest<{ success: boolean; stats: AdminDashboardStats }>('/api/admin/dashboard');
 	if (!statsData.success) throw new Error('Failed to load dashboard stats');
 	const summary = statsData.stats;
 
-	// Derive status breakdown from the dashboard stats we already have
-	const totalKnown =
-		(summary.pendingAppointments || 0) +
-		(summary.confirmedAppointments || 0) +
-		(summary.completedAppointments || 0);
-	const cancelled = Math.max(0, (summary.totalAppointments || 0) - totalKnown);
-
-	const statusBreakdown = {
+	const fallbackBreakdown: AppointmentStatusBreakdown = {
 		pending: summary.pendingAppointments || 0,
 		confirmed: summary.confirmedAppointments || 0,
 		completed: summary.completedAppointments || 0,
-		cancelled,
+		cancelled: 0,
 		noShow: 0,
 	};
 
-	// Try to fetch extended report data from /api/admin/reports
+	// /api/admin/reports nests report data under `report`; normalize it here so
+	// page components receive one stable client-side shape.
 	try {
 		const extended = await apiRequest<{
-			monthlyTrend?: ReportData['monthlyTrend'];
-			topDoctors?: ReportData['topDoctors'];
-			statusBreakdown?: ReportData['statusBreakdown'];
+			success: boolean;
+			report?: {
+				summary?: {
+					pendingAppointments?: number;
+					confirmedAppointments?: number;
+					completedAppointments?: number;
+					cancelledAppointments?: number;
+					noShowAppointments?: number;
+				};
+				appointmentTrend?: Array<{ date: string; status: string; count: number }>;
+			};
 		}>('/api/admin/reports');
+		const report = extended.report;
+		if (!extended.success || !report) throw new Error('Failed to load detailed report data');
+
+		const reportSummary = report.summary;
+		const statusBreakdown: AppointmentStatusBreakdown = {
+			pending: reportSummary?.pendingAppointments ?? fallbackBreakdown.pending,
+			confirmed: reportSummary?.confirmedAppointments ?? fallbackBreakdown.confirmed,
+			completed: reportSummary?.completedAppointments ?? fallbackBreakdown.completed,
+			cancelled: reportSummary?.cancelledAppointments ?? fallbackBreakdown.cancelled,
+			noShow: reportSummary?.noShowAppointments ?? fallbackBreakdown.noShow,
+		};
+
+		const trendByDate = new Map<string, AppointmentTrend>();
+		for (const row of report.appointmentTrend || []) {
+			const trend = trendByDate.get(row.date) || { month: row.date, total: 0, completed: 0, cancelled: 0 };
+			trend.total += Number(row.count) || 0;
+			if (row.status === 'completed') trend.completed += Number(row.count) || 0;
+			if (row.status === 'cancelled') trend.cancelled += Number(row.count) || 0;
+			trendByDate.set(row.date, trend);
+		}
 
 		return {
 			summary,
-			statusBreakdown: extended.statusBreakdown || statusBreakdown,
-			monthlyTrend: extended.monthlyTrend || [],
-			topDoctors: extended.topDoctors || [],
+			statusBreakdown,
+			monthlyTrend: [...trendByDate.values()],
+			topDoctors: [],
 		};
 	} catch {
-		// /api/admin/reports not available yet — return what we have from dashboard
+		// The dashboard remains useful if detailed report data is temporarily unavailable.
 		return {
 			summary,
-			statusBreakdown,
+			statusBreakdown: fallbackBreakdown,
 			monthlyTrend: [],
 			topDoctors: [],
 		};

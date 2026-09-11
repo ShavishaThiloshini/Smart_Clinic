@@ -55,35 +55,34 @@ export function PrescriptionTable({ prescriptions, loading, error, onPrescriptio
 
   return (
     <div className="prescriptions-container">
-      <div className="table-wrapper" style={{ overflowX: 'auto' }}>
-        <table className="medical-records-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+      <div className="table-wrapper">
+        <table className="medical-records-table">
           <thead>
-            <tr style={{ borderBottom: '2px solid #eee' }}>
-              <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Date</th>
-              <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Doctor</th>
-              <th style={{ padding: '1rem', color: '#666', fontWeight: 600 }}>Notes</th>
-              <th style={{ padding: '1rem', color: '#666', fontWeight: 600, textAlign: 'right' }}>Actions</th>
+            <tr>
+              <th>Date</th>
+              <th>Doctor</th>
+              <th>Notes</th>
+              <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {prescriptions.map((prescription) => (
-              <tr key={prescription.prescriptionId} className="record-row" style={{ borderBottom: '1px solid #eee', transition: 'background-color 0.2s' }}>
-                <td style={{ padding: '1rem' }}>
+              <tr key={prescription.prescriptionId} className="record-row">
+                <td data-label="Date">
                   <strong>{formatDate(prescription.createdAt)}</strong>
                 </td>
-                <td style={{ padding: '1rem' }}>
-                  <span className="doctor-name" style={{ color: '#0066cc', fontWeight: 500 }}>Dr. {prescription.doctorName}</span>
+                <td data-label="Doctor">
+                  <span className="doctor-name">Dr. {prescription.doctorName}</span>
                 </td>
-                <td style={{ padding: '1rem', maxWidth: '300px' }}>
-                  <span className="text-preview" style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#555' }}>
+                <td data-label="Notes" style={{ maxWidth: '300px' }}>
+                  <span className="text-preview">
                     {prescription.notes || '—'}
                   </span>
                 </td>
-                <td style={{ padding: '1rem', textAlign: 'right' }}>
-                  <button 
-                    type="button" 
-                    className="view-button"
-                    style={{ backgroundColor: '#f0f7ff', color: '#0066cc', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 500 }}
+                <td data-label="Actions" style={{ textAlign: 'right' }}>
+                  <button
+                    type="button"
+                    className="view-button prescription-view-button"
                     onClick={() => onPrescriptionClick?.(prescription)}
                   >
                     View details
@@ -106,12 +105,157 @@ export function PrescriptionTable({ prescriptions, loading, error, onPrescriptio
           margin-top: 1.5rem;
         }
 
-        .record-row:hover {
-          background-color: #f9f9f9;
+        .table-wrapper {
+          overflow-x: auto;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
         }
 
-        .view-button:hover {
+        .medical-records-table {
+          width: 100%;
+          border-collapse: collapse;
+          background-color: white;
+        }
+
+        .medical-records-table thead {
+          background-color: #f5f5f5;
+          border-bottom: 2px solid #e0e0e0;
+        }
+
+        .medical-records-table th {
+          padding: 1rem;
+          text-align: left;
+          font-weight: 600;
+          color: #333;
+          font-size: 0.875rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .medical-records-table tbody tr {
+          border-bottom: 1px solid #e0e0e0;
+          transition: background-color 0.2s ease;
+        }
+
+        .medical-records-table tbody tr:hover {
+          background-color: #fafafa;
+        }
+
+        .medical-records-table tbody tr:last-child {
+          border-bottom: none;
+        }
+
+        .medical-records-table td {
+          padding: 1rem;
+          font-size: 0.9375rem;
+        }
+
+        .doctor-name {
+          color: #0066cc;
+          font-weight: 500;
+        }
+
+        .text-preview {
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          color: #555;
+        }
+
+        .prescription-view-button {
+          background-color: #f0f7ff;
+          color: #0066cc;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 500;
+          transition: background-color 0.2s ease;
+        }
+
+        .prescription-view-button:hover {
           background-color: #e0efff;
+        }
+
+        .prescription-view-button:active {
+          background-color: #cce5ff;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+          .prescriptions-container {
+            margin-top: 1rem;
+          }
+
+          .medical-records-table thead {
+            display: none;
+          }
+
+          .medical-records-table,
+          .medical-records-table tbody,
+          .medical-records-table tr,
+          .medical-records-table td {
+            display: block;
+            width: 100%;
+          }
+
+          .medical-records-table tbody tr {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+          }
+
+          .medical-records-table tbody tr:hover {
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+
+          .medical-records-table td {
+            padding: 0.75rem;
+            position: relative;
+            padding-left: 120px;
+            border-bottom: 1px solid #f0f0f0;
+          }
+
+          .medical-records-table td:last-child {
+            border-bottom: none;
+          }
+
+          .medical-records-table td::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 0.75rem;
+            font-weight: 600;
+            color: #333;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            width: 100px;
+          }
+
+          .text-preview {
+            max-width: none;
+            white-space: normal;
+            word-wrap: break-word;
+          }
+
+          .prescription-view-button {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .medical-records-table td {
+            padding: 0.5rem;
+            padding-left: 100px;
+          }
+
+          .medical-records-table td::before {
+            width: 90px;
+            font-size: 0.7rem;
+          }
         }
       `}</style>
     </div>

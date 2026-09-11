@@ -69,19 +69,19 @@ export function MedicalHistoryTable({ records, loading, error, onRecordClick }: 
           <tbody>
             {records.map((record) => (
               <tr key={record.recordId} className="record-row">
-                <td className="record-date">
+                <td className="record-date" data-label="Date">
                   <strong>{formatDate(record.createdAt)}</strong>
                 </td>
-                <td className="record-doctor">
+                <td className="record-doctor" data-label="Doctor">
                   <span className="doctor-name">Dr. {record.doctorName}</span>
                 </td>
-                <td className="record-diagnosis">
+                <td className="record-diagnosis" data-label="Diagnosis">
                   <span className="text-preview">{record.diagnosis || '—'}</span>
                 </td>
-                <td className="record-treatment">
+                <td className="record-treatment" data-label="Treatment">
                   <span className="text-preview">{record.treatment || '—'}</span>
                 </td>
-                <td className="record-actions">
+                <td className="record-actions" data-label="Actions">
                   <button
                     type="button"
                     className="view-button"

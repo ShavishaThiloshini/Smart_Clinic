@@ -180,12 +180,7 @@ export function AdminDashboard() {
 								<small>Approve or manage doctor profiles</small>
 								<i>→</i>
 							</button>
-							<button type="button" className="quick-card admin-quick-card" onClick={() => navigate('/admin/appointments')}>
-								<span className="quick-icon purple">▣</span>
-								<strong>Appointments</strong>
-								<small>Monitor clinic-wide appointments</small>
-								<i>→</i>
-							</button>
+
 							<button type="button" className="quick-card admin-quick-card" onClick={() => navigate('/admin/reports')}>
 								<span className="quick-icon orange">📊</span>
 								<strong>Reports</strong>

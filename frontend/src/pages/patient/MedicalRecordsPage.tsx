@@ -25,6 +25,7 @@ export function MedicalRecordsPage() {
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const patientName = useMemo(() => {
     try {
@@ -71,6 +72,15 @@ export function MedicalRecordsPage() {
     navigate('/login', { replace: true });
   }
 
+  function toggleMobileMenu() {
+    setMobileMenuOpen(prev => !prev);
+  }
+
+  function handleNavigation(path: string) {
+    setMobileMenuOpen(false);
+    navigate(path);
+  }
+
   return (
     <main className="patient-shell">
       <aside className="patient-sidebar">
@@ -97,7 +107,7 @@ export function MedicalRecordsPage() {
 
       <section className="patient-content">
         <header className="patient-header">
-          <button className="mobile-menu" type="button" aria-label="Open navigation">☰</button>
+          <button className="mobile-menu" type="button" aria-label="Open navigation" onClick={toggleMobileMenu}>☰</button>
           <div className="patient-header-spacer" />
           <button className="notification-button" type="button" aria-label="Notifications" onClick={() => navigate('/patient/notifications')}>
             ♧{unreadCount > 0 && <span />}
@@ -112,6 +122,23 @@ export function MedicalRecordsPage() {
             {patientName.charAt(0).toUpperCase()}
           </div>
         </header>
+
+        {mobileMenuOpen && (
+          <div className="mobile-menu-overlay" onClick={toggleMobileMenu}>
+            <nav className="mobile-menu-nav" onClick={(e) => e.stopPropagation()}>
+              {navigation.map((nav) => (
+                <button
+                  key={nav.label}
+                  type="button"
+                  onClick={() => handleNavigation(nav.path)}
+                >
+                  <span aria-hidden="true">{nav.icon}</span>{nav.label}
+                </button>
+              ))}
+              <button type="button" onClick={logout}>↪ Sign out</button>
+            </nav>
+          </div>
+        )}
 
         <div className="patient-page">
           <section className="patient-welcome">
@@ -283,6 +310,61 @@ export function MedicalRecordsPage() {
 
         .retry-button:hover {
           background-color: #e0e0e0;
+        }
+
+        .mobile-menu-overlay {
+          position: fixed;
+          top: 76px;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1000;
+        }
+
+        .mobile-menu-nav {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 280px;
+          height: 100%;
+          background: #101d40;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .mobile-menu-nav button {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          width: 100%;
+          border: 0;
+          border-radius: 10px;
+          padding: 12px 14px;
+          background: transparent;
+          color: #b8c7e8;
+          font: 600 0.9rem inherit;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .mobile-menu-nav button:hover {
+          background: #2c4683;
+          color: #fff;
+        }
+
+        .mobile-menu-nav button span {
+          width: 17px;
+          font-size: 1.17rem;
+          text-align: center;
+        }
+
+        @media (min-width: 769px) {
+          .mobile-menu-overlay {
+            display: none;
+          }
         }
       `}</style>
     </main>

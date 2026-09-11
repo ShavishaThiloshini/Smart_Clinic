@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { LoginForm } from '../../components/auth/LoginForm';
 import { LoginFormState } from '../../types/auth.types';
 import logo from '../../assets/images/logo.png';
-import { apiRequest } from '../../services/api';
+import { login } from '../../services/auth.service';
 
 export function LoginPage() {
   const [error, setError]       = useState('');
@@ -15,15 +15,11 @@ export function LoginPage() {
     if (location.state?.sessionExpired) setError('Your session expired. Please sign in again.');
   }, [location.state]);
 
-  async function login(data: LoginFormState) {
+  async function handleLogin(data: LoginFormState) {
     setError('');
     setLoading(true);
     try {
-      const json = await apiRequest<{ token: string; user: { role?: string } }>('/api/auth/login', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: data.email, password: data.password }),
-      }, false);
+      const json = await login(data.email, data.password);
 
       // Store token + user in localStorage
       if (!json.token || !json.user?.role) throw new Error('The sign-in response was incomplete. Please try again.');
@@ -50,7 +46,7 @@ export function LoginPage() {
           <img className="brand-logo" src={logo} alt="Smart Clinic" />
         </header>
         <article className="auth-card">
-          <LoginForm onSubmit={login} isLoading={isLoading} error={error} />
+          <LoginForm onSubmit={handleLogin} isLoading={isLoading} error={error} />
         </article>
         <p className="security-note">Your healthcare information is protected.</p>
       </section>

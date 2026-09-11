@@ -20,9 +20,17 @@ export async function getDoctorAvailability(doctorId: number): Promise<Availabil
 }
 
 export async function rescheduleAppointment(appointmentId: number, appointmentDate: string, startTime: string): Promise<Appointment> {
+	// Calculate end time based on 30-minute default slot duration
+	const [hours, minutes] = startTime.split(':').map(Number);
+	const startTimeInMinutes = hours * 60 + minutes;
+	const endTimeInMinutes = startTimeInMinutes + 30;
+	const endHours = Math.floor(endTimeInMinutes / 60);
+	const endMinutes = endTimeInMinutes % 60;
+	const endTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+
 	const data = await apiRequest<{ success: boolean; appointment: Appointment }>(`/api/appointments/${appointmentId}/reschedule`, {
 		method: 'PUT',
-		body: JSON.stringify({ appointmentDate, startTime }),
+		body: JSON.stringify({ appointmentDate, startTime, endTime }),
 	});
 	if (!data.success) throw new Error('Failed to reschedule appointment');
 	return data.appointment;

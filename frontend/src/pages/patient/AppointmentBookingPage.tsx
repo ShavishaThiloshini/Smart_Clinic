@@ -128,6 +128,7 @@ export function AppointmentBookingPage() {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const patientName = (() => {
     try {
@@ -141,6 +142,15 @@ export function AppointmentBookingPage() {
     localStorage.removeItem('sc_token');
     localStorage.removeItem('sc_user');
     navigate('/login', { replace: true });
+  }
+
+  function toggleMobileMenu() {
+    setMobileMenuOpen(prev => !prev);
+  }
+
+  function handleNavigation(path: string) {
+    setMobileMenuOpen(false);
+    navigate(path);
   }
 
   /* Load doctor + availability */
@@ -217,12 +227,21 @@ export function AppointmentBookingPage() {
     setSubmitting(true);
     setSubmitError('');
     try {
+      // Calculate end time based on slot duration (default 30 minutes)
+      const [hours, minutes] = selectedTime.split(':').map(Number);
+      const startTimeInMinutes = hours * 60 + minutes;
+      const endTimeInMinutes = startTimeInMinutes + 30; // Default 30-minute slots
+      const endHours = Math.floor(endTimeInMinutes / 60);
+      const endMinutes = endTimeInMinutes % 60;
+      const endTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+
       const data = await apiRequest<{ success: boolean; appointment: unknown }>('/api/appointments', {
         method: 'POST',
         body: JSON.stringify({
           doctorId: doctor.doctorId,
           appointmentDate: isoDate(selectedDate),
           startTime: selectedTime,
+          endTime: endTime,
           reason: reason.trim(),
         }),
       });
@@ -237,6 +256,7 @@ export function AppointmentBookingPage() {
 
   /* ──── Render ──── */
   return (
+    <>
     <main className="patient-shell">
       <aside className="patient-sidebar">
         <img className="patient-logo" src={logo} alt="Smart Clinic" />
@@ -257,7 +277,7 @@ export function AppointmentBookingPage() {
 
       <section className="patient-content">
         <header className="patient-header">
-          <button className="mobile-menu" type="button" aria-label="Open navigation">☰</button>
+          <button className="mobile-menu" type="button" aria-label="Open navigation" onClick={toggleMobileMenu}>☰</button>
           <div className="patient-header-spacer" />
           <button className="notification-button" type="button" aria-label="Notifications">♧<span /></button>
           <div
@@ -270,6 +290,23 @@ export function AppointmentBookingPage() {
             {patientName.charAt(0).toUpperCase()}
           </div>
         </header>
+
+        {mobileMenuOpen && (
+          <div className="mobile-menu-overlay" onClick={toggleMobileMenu}>
+            <nav className="mobile-menu-nav" onClick={(e) => e.stopPropagation()}>
+              {navigation.map((nav) => (
+                <button
+                  key={nav.label}
+                  type="button"
+                  onClick={() => handleNavigation(nav.path)}
+                >
+                  <span aria-hidden="true">{nav.icon}</span>{nav.label}
+                </button>
+              ))}
+              <button type="button" onClick={logout}>↪ Sign out</button>
+            </nav>
+          </div>
+        )}
 
         <div className="patient-page">
           {/* Breadcrumb */}
@@ -510,5 +547,63 @@ export function AppointmentBookingPage() {
         </div>
       </section>
     </main>
+
+    <style>{`
+      .mobile-menu-overlay {
+        position: fixed;
+        top: 76px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      }
+
+      .mobile-menu-nav {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100%;
+        background: #101d40;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .mobile-menu-nav button {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        width: 100%;
+        border: 0;
+        border-radius: 10px;
+        padding: 12px 14px;
+        background: transparent;
+        color: #b8c7e8;
+        font: 600 0.9rem inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .mobile-menu-nav button:hover {
+        background: #2c4683;
+        color: #fff;
+      }
+
+      .mobile-menu-nav button span {
+        width: 17px;
+        font-size: 1.17rem;
+        text-align: center;
+      }
+
+      @media (min-width: 769px) {
+        .mobile-menu-overlay {
+          display: none;
+        }
+      }
+    `}</style>
+    </>
   );
 }

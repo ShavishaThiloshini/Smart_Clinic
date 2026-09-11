@@ -15,18 +15,28 @@ export function clearStoredSession() {
 }
 
 function messageForStatus(status: number) {
-  if (status === 400 || status === 422) return 'Please review the information you entered and try again.';
+  if (status === 400) return 'Please review the information you entered and try again.';
   if (status === 401) return 'Your session has expired. Please sign in again.';
   if (status === 403) return 'You do not have permission to perform this action.';
   if (status === 404) return 'The requested information could not be found.';
   if (status === 409) return 'This time slot is no longer available. Please select another slot.';
+  if (status === 422) return 'Please check your input and try again.';
   if (status === 429) return 'Too many requests. Please wait a moment and try again.';
+  if (status === 500) return 'Server error. Please try again later.';
+  if (status === 503) return 'Service unavailable. Please try again later.';
   return 'We could not complete your request. Please try again.';
 }
 
 async function readJson(response: Response): Promise<unknown> {
   const contentType = response.headers.get('content-type') || '';
-  return contentType.includes('application/json') ? response.json() : null;
+  if (contentType.includes('application/json')) {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 export async function apiRequest<T>(url: string, options: RequestInit = {}, authenticated = true): Promise<T> {

@@ -102,6 +102,270 @@
     flex-direction: column;
     gap: 20px;
   }
+
+  .patient-shell {
+    flex-direction: column;
+  }
+
+  .patient-sidebar {
+    width: 100%;
+    min-height: auto;
+    padding: 16px;
+    margin: 0 0 16px 0;
+  }
+
+  .patient-page {
+    padding: 32px 20px 48px;
+  }
+
+  .patient-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .doctor-card,
+  .upcoming-card,
+  .care-tip-card {
+    width: 100%;
+  }
+
+  .admin-shell {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    min-height: auto;
+    padding: 16px;
+    margin: 0 0 16px 0;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-header {
+    padding: 0 20px;
+  }
+
+  .section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .history-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .history-tabs {
+    width: 100%;
+  }
+
+  .doctor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-pub-layout {
+    flex-direction: column;
+  }
+
+  .doc-pub-sidebar-panel {
+    width: 100%;
+  }
+
+  .bk-panel {
+    padding: 20px;
+  }
+
+  .bk-calendar {
+    font-size: 0.875rem;
+  }
+
+  .cal-day {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .bk-slot-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 601px) and (max-width: 768px) {
+  .patient-sidebar {
+    width: 200px;
+  }
+
+  .patient-page {
+    padding: 40px 24px 56px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .doctor-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .doc-pub-layout {
+    gap: 20px;
+  }
+
+  .admin-dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .history-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .doctor-profile-shell {
+    flex-direction: column;
+  }
+
+  .doctor-profile-sidebar {
+    width: 100%;
+    min-height: auto;
+    padding: 16px;
+    margin: 0 0 16px 0;
+  }
+
+  .doctor-profile-content {
+    padding: 0 20px;
+  }
+
+  .doctor-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .avail-wrapper {
+    padding: 16px;
+  }
+
+  .avail-day-card {
+    padding: 16px;
+  }
+
+  .avail-slot-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .avail-slot-times {
+    width: 100%;
+  }
+
+  .avail-slot-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .avail-footer-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .avail-footer-actions button {
+    width: 100%;
+  }
+
+  .rx-selection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rx-item-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .rx-item-row legend {
+    display: none;
+  }
+
+  .rx-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .rx-actions button {
+    width: 100%;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .patient-sidebar {
+    width: 220px;
+  }
+
+  .admin-sidebar {
+    width: 220px;
+  }
+
+  .patient-page {
+    padding: 40px 32px 56px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .doctor-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .bk-slot-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .rx-selection-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .rx-item-row {
+    grid-template-columns: repeat(4, 1fr) auto;
+  }
+}
   .profile-card {
     padding: 25px 20px;
   }

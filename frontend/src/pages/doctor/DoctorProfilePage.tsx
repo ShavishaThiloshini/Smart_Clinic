@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
-import { apiRequest } from '../../services/api';
+import { getDoctorProfile, updateDoctorProfile } from '../../services/doctor.service';
 
 type DoctorProfile = {
   name: string;
@@ -41,7 +41,7 @@ export function DoctorProfilePage() {
 
     async function loadProfile() {
       try {
-        const result = await apiRequest<{ success: boolean; profile?: Partial<DoctorProfile> }>('/api/doctor/profile');
+        const result = await getDoctorProfile();
         if (result.success && result.profile) {
           setProfile((current) => ({ ...current, ...result.profile, specialization: result.profile.specialization || '', clinic: result.profile.clinic || '', qualifications: result.profile.qualifications || '', bio: result.profile.bio || '', experience: result.profile.experience?.toString() || '', consultationFee: result.profile.consultationFee?.toString() || '' }));
         }
@@ -76,10 +76,7 @@ export function DoctorProfilePage() {
     setSaving(true);
     setNotice({ type: '', text: '' });
     try {
-      const result = await apiRequest<{ success: boolean; message?: string }>(`/api/doctor/profile`, {
-        method: 'PUT',
-        body: JSON.stringify({ ...profile, experience: profile.experience ? Number(profile.experience) : null, consultationFee: profile.consultationFee ? Number(profile.consultationFee) : null })
-      });
+      const result = await updateDoctorProfile({ ...profile, experience: profile.experience ? Number(profile.experience) : null, consultationFee: profile.consultationFee ? Number(profile.consultationFee) : null });
       if (!result.success) throw new Error(result.message || 'Failed to save profile.');
       localStorage.setItem('sc_user', JSON.stringify({ ...JSON.parse(localStorage.getItem('sc_user') || '{}'), name: profile.name }));
       setNotice({ type: 'success', text: 'Doctor profile updated successfully.' });
@@ -103,8 +100,6 @@ export function DoctorProfilePage() {
       <nav aria-label="Doctor navigation">
         <button type="button" onClick={() => navigate('/doctor/profile')}>My profile</button>
         <button type="button" onClick={() => navigate('/doctor/prescriptions')}>Prescriptions</button>
-        <button type="button" disabled>Appointments</button>
-        <button type="button" disabled>Patients</button>
         <button type="button" onClick={() => navigate('/doctor/availability')}>Availability</button>
       </nav>
       <button className="doctor-signout" type="button" onClick={signOut}>Sign out</button>
