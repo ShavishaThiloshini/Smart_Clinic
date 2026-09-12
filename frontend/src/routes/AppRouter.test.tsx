@@ -38,7 +38,7 @@ describe('AppRouter', () => {
     expect(screen.getByText('Welcome back')).toBeInTheDocument();
   });
 
-  it('renders patient dashboard for authenticated patients', () => {
+  it('renders patient dashboard for authenticated patients', async () => {
     localStorage.setItem('sc_token', 'demo-token');
     localStorage.setItem('sc_user', JSON.stringify({ name: 'Sample Patient', role: 'patient' }));
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
@@ -52,7 +52,7 @@ describe('AppRouter', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('heading', { name: /Good morning, Sample\./i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Good morning, Sample\./i })).toBeInTheDocument();
   });
 
   it('renders the medical records page for authenticated patients', async () => {
