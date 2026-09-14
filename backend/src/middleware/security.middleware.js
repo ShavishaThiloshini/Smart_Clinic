@@ -66,20 +66,30 @@ const sanitizeInput = (req, res, next) => {
     return sanitized;
   };
 
+  const sanitizeInPlace = (obj) => {
+    if (!obj || typeof obj !== 'object') return;
+
+    for (const key of Object.keys(obj)) {
+      if (typeof obj[key] === 'string') {
+        obj[key] = sanitizeString(obj[key]);
+      } else if (Array.isArray(obj[key])) {
+        obj[key] = obj[key].map((item) => (
+          typeof item === 'string' ? sanitizeString(item) : item
+        ));
+      } else if (obj[key] && typeof obj[key] === 'object') {
+        sanitizeInPlace(obj[key]);
+      }
+    }
+  };
+
   // Sanitize request body
   if (req.body) {
     req.body = sanitizeObject(req.body);
   }
 
-  // Sanitize request query
-  if (req.query) {
-    req.query = sanitizeObject(req.query);
-  }
-
-  // Sanitize request params
-  if (req.params) {
-    req.params = sanitizeObject(req.params);
-  }
+  // Express 5 exposes query through a getter, so mutate its existing object.
+  sanitizeInPlace(req.query);
+  sanitizeInPlace(req.params);
 
   next();
 };
