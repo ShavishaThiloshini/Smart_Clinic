@@ -37,22 +37,22 @@ export function getRoleDisplayName(role: string): string {
 
 // Check if role can access patient data
 export function canAccessPatientData(userRole: string): boolean {
-  return [ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN].includes(userRole);
+  return ([ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN] as string[]).includes(userRole);
 }
 
 // Check if role can access doctor data
 export function canAccessDoctorData(userRole: string): boolean {
-  return [ROLES.DOCTOR, ROLES.ADMIN].includes(userRole);
+  return ([ROLES.DOCTOR, ROLES.ADMIN] as string[]).includes(userRole);
 }
 
 // Check if role can manage appointments
 export function canManageAppointments(userRole: string): boolean {
-  return [ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN].includes(userRole);
+  return ([ROLES.PATIENT, ROLES.DOCTOR, ROLES.ADMIN] as string[]).includes(userRole);
 }
 
 // Check if role can create medical records
 export function canCreateMedicalRecords(userRole: string): boolean {
-  return [ROLES.DOCTOR, ROLES.ADMIN].includes(userRole);
+  return ([ROLES.DOCTOR, ROLES.ADMIN] as string[]).includes(userRole);
 }
 
 // Check if role can manage users
