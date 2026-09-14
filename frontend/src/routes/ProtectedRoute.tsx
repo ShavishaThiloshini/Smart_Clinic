@@ -8,30 +8,23 @@ type ProtectedRouteProps = {
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
 	const location = useLocation();
 	const token = localStorage.getItem('sc_token');
-	const user = (() => {
-		try {
-			return JSON.parse(localStorage.getItem('sc_user') || '{}') as { role?: string };
-		} catch {
-			return {};
-		}
-	})();
-
-	const isExpired = (() => {
+	const tokenClaims = (() => {
 		if (!token) return false;
 		try {
 			const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-			return typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now();
-		} catch { return false; }
+			return { role: typeof payload.role === 'string' ? payload.role : '', isExpired: typeof payload.exp === 'number' && payload.exp * 1000 <= Date.now() };
+		} catch { return null; }
 	})();
+	const isExpired = !tokenClaims || tokenClaims.isExpired;
 
 	if (!token || isExpired) {
 		if (isExpired) clearStoredSession();
 		return <Navigate to="/login" replace state={{ from: location }} />;
 	}
 
-	if (allowedRoles && (!user.role || !allowedRoles.includes(user.role))) {
-		if (!user.role) return <Navigate to="/login" replace />;
-		return <Navigate to={`/${user.role}/dashboard`} replace />;
+	if (allowedRoles && (!tokenClaims?.role || !allowedRoles.includes(tokenClaims.role))) {
+		if (!tokenClaims?.role) return <Navigate to="/login" replace />;
+		return <Navigate to={`/${tokenClaims.role}/dashboard`} replace />;
 	}
 
 	return <Outlet />;

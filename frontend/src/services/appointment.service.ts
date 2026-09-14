@@ -4,7 +4,23 @@ import { apiRequest } from './api';
 export async function getAppointments(): Promise<Appointment[]> {
 	const data = await apiRequest<{ success: boolean; appointments?: Appointment[] }>('/api/appointments');
 	if (!data.success) return [];
-	return data.appointments || [];
+	return (data.appointments || []).map((appointment) => ({
+		...appointment,
+		status: appointment.status === 'confirmed' ? 'accepted' : appointment.status,
+	}));
+}
+
+export async function updateAppointmentStatus(appointmentId: number, status: 'pending' | 'confirmed' | 'accepted' | 'completed' | 'cancelled' | 'no-show'): Promise<Appointment> {
+	const bodyStatus = status === 'accepted' ? 'confirmed' : status;
+	const data = await apiRequest<{ success: boolean; appointment: Appointment }>(`/api/appointments/${appointmentId}/status`, {
+		method: 'PATCH',
+		body: JSON.stringify({ status: bodyStatus }),
+	});
+	if (!data.success) throw new Error('Failed to update appointment status');
+	return {
+		...data.appointment,
+		status: data.appointment.status === 'confirmed' ? 'accepted' : data.appointment.status,
+	};
 }
 
 export async function cancelAppointment(appointmentId: number): Promise<Appointment> {

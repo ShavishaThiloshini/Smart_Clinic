@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 import { apiRequest } from '../../services/api';
+import { getDoctorReviews } from '../../services/review.service';
+import type { Review } from '../../types/review.types';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -52,6 +54,7 @@ export function DoctorPublicProfilePage() {
 
   const [doctor, setDoctor] = useState<DoctorProfile | null>(null);
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -85,13 +88,15 @@ export function DoctorPublicProfilePage() {
     Promise.all([
       apiRequest<{ success: boolean; doctor: DoctorProfile }>(`/api/doctors/${doctorId}`),
       apiRequest<{ success: boolean; availability?: AvailabilitySlot[] }>(`/api/doctors/${doctorId}/availability`),
+      getDoctorReviews(Number(doctorId)),
     ])
-      .then(([doctorData, availData]) => {
+      .then(([doctorData, availData, reviewData]) => {
         if (!doctorData.success || !doctorData.doctor) { setError('Doctor not found.'); return; }
         setDoctor(doctorData.doctor);
         if (availData.success) {
           setAvailability((availData.availability || []).filter((s: AvailabilitySlot) => s.status));
         }
+        setReviews(reviewData);
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Unable to load doctor profile.'))
       .finally(() => setLoading(false));
@@ -238,6 +243,37 @@ export function DoctorPublicProfilePage() {
                     <p className="doc-pub-bio">{doctor.bio}</p>
                   </section>
                 )}
+
+                <section className="doc-pub-section doc-pub-reviews" aria-label="Patient feedback">
+                  <div className="doc-pub-section-heading">
+                    <div>
+                      <p className="doc-pub-kicker">PATIENT FEEDBACK</p>
+                      <h2>What patients say</h2>
+                    </div>
+                    <div className="doc-pub-review-summary">
+                      <StarRating rating={Number(doctor.rating)} />
+                      <strong>{Number(doctor.rating).toFixed(1)} / 5</strong>
+                    </div>
+                  </div>
+                  {reviews.length === 0 ? (
+                    <p className="doc-pub-no-reviews">No approved feedback yet. Be the first to share your experience after your visit.</p>
+                  ) : (
+                    <div className="doc-pub-review-list">
+                      {reviews.slice(0, 5).map((review) => (
+                        <article className="doc-pub-review" key={review.reviewId}>
+                          <div className="doc-pub-review-topline">
+                            <span className="doc-pub-review-avatar">{(review.patientName || 'P').charAt(0).toUpperCase()}</span>
+                            <div>
+                              <strong>{review.patientName || 'Patient'}</strong>
+                              <StarRating rating={Number(review.rating)} />
+                            </div>
+                          </div>
+                          {review.comment && <p>“{review.comment}”</p>}
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
               </article>
 
               {/* Right: Availability + Book */}

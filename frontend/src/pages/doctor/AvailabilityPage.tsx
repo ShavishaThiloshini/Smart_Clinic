@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 import { apiRequest } from '../../services/api';
+import { DoctorSidebar } from '../../components/doctor/DoctorSidebar';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const SLOT_DURATIONS = [15, 20, 30, 45, 60];
@@ -96,17 +97,7 @@ export function AvailabilityPage() {
 
   return (
     <main className="doctor-profile-shell">
-      {/* Sidebar */}
-      <aside className="doctor-profile-sidebar">
-        <img src={logo} alt="Smart Clinic" />
-        <p className="doctor-profile-role">DOCTOR PORTAL</p>
-        <nav aria-label="Doctor navigation">
-          <button type="button" onClick={() => navigate('/doctor/profile')}>My profile</button>
-          <button type="button" onClick={() => navigate('/doctor/prescriptions')}>Prescriptions</button>
-          <button type="button" className="avail-nav-active" onClick={() => navigate('/doctor/availability')}>Availability</button>
-        </nav>
-        <button className="doctor-signout" type="button" onClick={signOut}>Sign out</button>
-      </aside>
+      <DoctorSidebar onSignOut={signOut} />
 
       {/* Content */}
       <section className="doctor-profile-content">

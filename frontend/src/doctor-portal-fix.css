@@ -1,0 +1,106 @@
+.doctor-profile-shell {
+  display: flex !important;
+  min-height: 100vh;
+  background: #f4f7fb !important;
+  color: #17213a !important;
+}
+
+.doctor-profile-sidebar {
+  flex: 0 0 245px !important;
+  width: 245px !important;
+  min-height: 100vh !important;
+  position: sticky !important;
+  top: 0;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  align-self: flex-start;
+  box-sizing: border-box;
+}
+
+.doctor-profile-sidebar img {
+  display: block !important;
+  width: 124px !important;
+  height: auto !important;
+  margin: 0 auto 28px !important;
+  flex: 0 0 auto;
+}
+
+.doctor-profile-sidebar nav button:first-child {
+  background: transparent;
+  color: #c0ceeb;
+}
+
+.doctor-profile-sidebar nav button:hover,
+.doctor-profile-sidebar nav button.avail-nav-active {
+  background: #28477f !important;
+  color: #fff !important;
+}
+
+.doctor-profile-content {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  min-height: 100vh;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: #f4f7fb !important;
+}
+
+.doctor-profile-header {
+  display: flex !important;
+  min-height: 74px;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.doctor-profile-page {
+  display: block !important;
+  width: 100%;
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 46px 48px 64px;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.doctor-profile-page h1,
+.doctor-profile-page p {
+  visibility: visible !important;
+}
+
+.avail-wrapper {
+  display: grid !important;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.avail-day-card {
+  display: block !important;
+  min-height: 84px;
+  padding: 0;
+  border: 1px solid #e0e8f5;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .doctor-profile-shell {
+    flex-direction: column !important;
+  }
+
+  .doctor-profile-sidebar {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-height: auto !important;
+    position: static !important;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .doctor-profile-page {
+    padding: 30px 20px 48px;
+  }
+}

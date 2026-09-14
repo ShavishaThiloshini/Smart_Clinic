@@ -97,58 +97,61 @@ export function ReviewPage() {
           </div>
         </header>
 
-        <div className="patient-page">
-          <section className="patient-welcome">
+        <div className="patient-page review-page">
+          <section className="patient-welcome review-hero">
             <div>
               <p className="patient-eyebrow">FEEDBACK</p>
-              <h1>Reviews & Ratings</h1>
-              <p>Share your experience to help us improve.</p>
+              <h1>Your feedback matters</h1>
+              <p>Tell us about your completed visits and help other patients choose with confidence.</p>
             </div>
+            <button type="button" className="find-doctor-button" onClick={() => navigate('/patient/appointments')}>View appointments</button>
           </section>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '2rem' }}>
-            
-            {/* Needs Review Section */}
-            <section>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#333' }}>Pending Reviews</h2>
+          <section className="review-stat-grid" aria-label="Review summary">
+            <article className="review-stat-card"><span className="review-stat-icon blue">★</span><div><strong>{reviews.length}</strong><p>Reviews shared</p></div></article>
+            <article className="review-stat-card"><span className="review-stat-icon teal">✓</span><div><strong>{completedAppointments.length}</strong><p>Completed visits</p></div></article>
+            <article className="review-stat-card"><span className="review-stat-icon gold">✦</span><div><strong>{unreviewedAppointments.length}</strong><p>Waiting for feedback</p></div></article>
+          </section>
+
+          <div className="review-columns">
+            <section className="review-section review-section-primary">
+              <div className="review-section-heading"><div><p className="section-kicker">YOUR TO-DO LIST</p><h2>Visits waiting for feedback</h2></div><span className="review-count">{unreviewedAppointments.length}</span></div>
               {apptsLoading ? (
-                <p>Loading appointments...</p>
+                <div className="review-loading">Loading completed visits...</div>
               ) : unreviewedAppointments.length === 0 ? (
-                <div style={{ backgroundColor: '#f9f9f9', padding: '2rem', borderRadius: '8px', textAlign: 'center' }}>
-                  <p style={{ color: '#666', margin: 0 }}>No pending reviews. Thank you for your feedback!</p>
+                <div className="review-empty">
+                  <span className="review-empty-icon">✓</span>
+                  <h3>All caught up</h3>
+                  <p>There are no completed visits waiting for a review.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="review-task-list">
                   {unreviewedAppointments.map((appt: any) => (
-                    <div key={appt.appointmentId} style={{ backgroundColor: '#fff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <p style={{ margin: '0 0 0.25rem', fontWeight: 600 }}>Dr. {appt.doctorName}</p>
-                        <p style={{ margin: 0, fontSize: '0.875rem', color: '#666' }}>{appt.appointmentDate}</p>
+                    <article className="review-task" key={appt.appointmentId}>
+                      <div className="review-task-avatar">{(appt.doctorName || 'D').split(' ').filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase()}</div>
+                      <div className="review-task-main">
+                        <h3>Dr. {appt.doctorName}</h3>
+                        <p>{new Date(`${appt.appointmentDate}T00:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p>
                       </div>
-                      <button 
-                        type="button"
-                        style={{ backgroundColor: '#0066cc', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 500 }}
-                        onClick={() => setSelectedAppointment({ id: appt.appointmentId, doctorName: appt.doctorName, date: appt.appointmentDate })}
-                      >
-                        Leave Review
-                      </button>
-                    </div>
+                      <button type="button" className="review-action" onClick={() => setSelectedAppointment({ id: appt.appointmentId, doctorName: appt.doctorName, date: appt.appointmentDate })}>Leave review <span>→</span></button>
+                    </article>
                   ))}
                 </div>
               )}
             </section>
 
-            {/* Past Reviews Section */}
-            <section>
-              <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#333' }}>Your Past Reviews</h2>
+            <section className="review-section">
+              <div className="review-section-heading"><div><p className="section-kicker">YOUR VOICE</p><h2>Past reviews</h2></div><span className="review-count">{reviews.length}</span></div>
               {reviewsLoading ? (
-                <p>Loading reviews...</p>
+                <div className="review-loading">Loading your reviews...</div>
               ) : reviews.length === 0 ? (
-                <div style={{ backgroundColor: '#f9f9f9', padding: '2rem', borderRadius: '8px', textAlign: 'center' }}>
-                  <p style={{ color: '#666', margin: 0 }}>You haven't left any reviews yet.</p>
+                <div className="review-empty">
+                  <span className="review-empty-icon">★</span>
+                  <h3>Your review history is empty</h3>
+                  <p>After a completed visit, your feedback will appear here.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="review-history-list">
                   {reviews.map(review => (
                     <ReviewCard key={review.reviewId} review={review} />
                   ))}

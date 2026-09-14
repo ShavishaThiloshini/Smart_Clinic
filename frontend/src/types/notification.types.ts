@@ -1,6 +1,7 @@
 export type NotificationType = 
   | 'appointment_created'
   | 'appointment_confirmed'
+  | 'appointment_accepted'
   | 'appointment_cancelled'
   | 'appointment_rescheduled'
   | 'appointment_completed'

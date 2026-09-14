@@ -9,6 +9,7 @@ import { DoctorManagementPage } from '../pages/admin/DoctorManagementPage';
 import { AvailabilityPage } from '../pages/doctor/AvailabilityPage';
 import { DoctorProfilePage } from '../pages/doctor/DoctorProfilePage';
 import { PrescriptionPage } from '../pages/doctor/PrescriptionPage';
+import { DoctorAppointmentsPage } from '../pages/doctor/DoctorAppointmentsPage';
 import { DoctorSearchPage } from '../pages/patient/DoctorSearchPage';
 import { DoctorPublicProfilePage } from '../pages/patient/DoctorPublicProfilePage';
 import { AppointmentBookingPage } from '../pages/patient/AppointmentBookingPage';
@@ -45,8 +46,9 @@ export function AppRouter() {
 			</Route>
 
 			<Route element={<DoctorRoute />}>
-				<Route path="/doctor/dashboard" element={<Navigate to="/doctor/profile" replace />} />
+				<Route path="/doctor/dashboard" element={<Navigate to="/doctor/appointments" replace />} />
 				<Route path="/doctor/profile" element={<DoctorProfilePage />} />
+				<Route path="/doctor/appointments" element={<DoctorAppointmentsPage />} />
 				<Route path="/doctor/availability" element={<AvailabilityPage />} />
 				<Route path="/doctor/prescriptions" element={<PrescriptionPage />} />
 			</Route>

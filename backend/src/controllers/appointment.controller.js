@@ -455,8 +455,9 @@ async function updateAppointmentStatus(req, res, next) {
     return res.status(422).json({ success: false, message: 'appointmentId must be a positive integer.' });
   }
 
+  const normalizedStatus = status === 'accepted' ? 'confirmed' : status;
   const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled', 'no-show'];
-  if (!validStatuses.includes(status)) {
+  if (!validStatuses.includes(normalizedStatus)) {
     return res.status(422).json({ success: false, message: 'Invalid status.' });
   }
 
@@ -490,8 +491,8 @@ async function updateAppointmentStatus(req, res, next) {
     }
 
     let query = 'UPDATE appointments SET status = ?';
-    let queryParams = [status];
-    if (status === 'cancelled' || status === 'no-show') {
+    let queryParams = [normalizedStatus];
+    if (normalizedStatus === 'cancelled' || normalizedStatus === 'no-show') {
       query += ', queue_number = NULL';
     }
     query += ' WHERE appointment_id = ?';
@@ -502,17 +503,18 @@ async function updateAppointmentStatus(req, res, next) {
 
     const [updatedRows] = await pool.query(`${APPOINTMENT_SELECT} WHERE a.appointment_id = ?`, [appointmentId]);
     const updatedAppt = mapAppointment(updatedRows[0]);
+    const displayStatus = updatedAppt.status === 'confirmed' ? 'accepted' : updatedAppt.status;
 
-    // Notify patient about status update (e.g., confirmed, cancelled)
+    // Notify patient about status update (e.g., accepted, cancelled)
     const [patUser] = await connection.query('SELECT user_id AS userId FROM patients WHERE patient_id = ?', [updatedAppt.patientId]);
     if (patUser.length) {
       await createNotification({
         connection,
         userId: patUser[0].userId,
         appointmentId: updatedAppt.appointmentId,
-        title: `Appointment ${updatedAppt.status.charAt(0).toUpperCase() + updatedAppt.status.slice(1)}`,
-        message: `Your appointment with Dr. ${updatedAppt.doctorName} has been marked as ${updatedAppt.status}.`,
-        type: `appointment_${updatedAppt.status}`
+        title: `Appointment ${displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1)}`,
+        message: `Your appointment with Dr. ${updatedAppt.doctorName} has been marked as ${displayStatus}.`,
+        type: `appointment_${displayStatus}`
       });
     }
 

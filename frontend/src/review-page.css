@@ -1,0 +1,243 @@
+.review-page {
+  max-width: 1180px;
+}
+
+.review-hero {
+  margin-bottom: 28px;
+}
+
+.review-hero > div {
+  max-width: 680px;
+}
+
+.review-hero p:last-child {
+  max-width: 620px;
+}
+
+.review-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.review-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid #dce7f3;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 22px #2c44700b;
+}
+
+.review-stat-card strong {
+  display: block;
+  color: #1c2d4b;
+  font-size: 1.35rem;
+}
+
+.review-stat-card p {
+  margin: 3px 0 0;
+  color: #71809a;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.review-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+.review-stat-icon.blue { background: #edf3ff; color: #315be7; }
+.review-stat-icon.teal { background: #e5faf6; color: #0f9c8b; }
+.review-stat-icon.gold { background: #fff6dd; color: #c78a00; }
+
+.review-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.review-section {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid #dce7f3;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 24px #2c44700a;
+}
+
+.review-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.review-section-heading h2 {
+  margin: 6px 0 0;
+  color: #1c2d4b;
+  font-size: 1.15rem;
+}
+
+.review-count {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #edf3ff;
+  color: #315be7;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.review-task-list,
+.review-history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.review-task {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  padding: 14px;
+  border: 1px solid #e4ebf5;
+  border-radius: 13px;
+  background: #fbfdff;
+}
+
+.review-task-avatar {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #3463df, #14a7a1);
+  color: #fff;
+  font-weight: 800;
+}
+
+.review-task-main {
+  min-width: 0;
+}
+
+.review-task-main h3 {
+  margin: 0 0 5px;
+  overflow-wrap: anywhere;
+  color: #1c2d4b;
+  font-size: .92rem;
+}
+
+.review-task-main p {
+  margin: 0;
+  color: #71809a;
+  font-size: .78rem;
+}
+
+.review-action {
+  border: 1px solid #315be7;
+  border-radius: 9px;
+  padding: 9px 12px;
+  background: #315be7;
+  color: #fff;
+  font: 700 .76rem inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.review-action span {
+  margin-left: 5px;
+  font-size: 1rem;
+}
+
+.review-action:hover {
+  filter: brightness(1.08);
+}
+
+.review-empty {
+  display: grid;
+  justify-items: center;
+  padding: 30px 18px;
+  border: 1px dashed #cfdced;
+  border-radius: 13px;
+  background: #fbfdff;
+  text-align: center;
+}
+
+.review-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: #eaf5f3;
+  color: #159a8b;
+  font-weight: 800;
+}
+
+.review-empty h3 {
+  margin: 0 0 6px;
+  color: #304360;
+  font-size: .95rem;
+}
+
+.review-empty p,
+.review-loading {
+  margin: 0;
+  color: #71809a;
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.review-loading {
+  padding: 28px 0;
+  text-align: center;
+}
+
+.review-history-list .review-card {
+  margin-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 800px) {
+  .review-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .review-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-section {
+    padding: 18px;
+  }
+
+  .review-task {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .review-task-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .review-action {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}

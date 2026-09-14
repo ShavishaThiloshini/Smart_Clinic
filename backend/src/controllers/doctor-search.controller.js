@@ -11,7 +11,20 @@ function positiveInteger(value, fallback, maximum) {
 }
 
 function searchCriteria(query) {
-  const filters = ["u.role = 'doctor'", "u.status = 'active'", "d.approval_status = 'approved'"];
+  const filters = [
+    "u.role = 'doctor'",
+    "u.status = 'active'",
+    "d.approval_status = 'approved'",
+    `d.doctor_id = (
+      SELECT MIN(d2.doctor_id)
+      FROM doctors d2
+      JOIN users u2 ON u2.user_id = d2.user_id
+      WHERE u2.role = 'doctor'
+        AND u2.status = 'active'
+        AND d2.approval_status = 'approved'
+        AND LOWER(TRIM(u2.name)) = LOWER(TRIM(u.name))
+    )`
+  ];
   const values = [];
 
   if (query.q?.trim()) {
@@ -43,7 +56,7 @@ async function searchDoctors(req, res, next) {
 
     const [[count]] = await pool.query(`SELECT COUNT(*) AS total ${joins} WHERE ${where}`, values);
     const [doctors] = await pool.query(
-      `SELECT d.doctor_id AS doctorId, u.name, s.name AS specialization, c.name AS clinic,
+      `SELECT d.doctor_id AS doctorId, u.name, d.approval_status AS approvalStatus, s.name AS specialization, c.name AS clinic,
         d.qualifications, d.experience, d.consultation_fee AS consultationFee, d.bio,
         COALESCE(ROUND(AVG(CASE WHEN r.status = 'approved' THEN r.rating END), 1), 0) AS rating,
         COUNT(CASE WHEN r.status = 'approved' THEN r.review_id END) AS reviewCount
@@ -65,7 +78,7 @@ async function getDoctorById(req, res, next) {
     const doctorId = positiveInteger(req.params.doctorId, 0, Number.MAX_SAFE_INTEGER);
     if (!doctorId) return res.status(400).json({ success: false, message: 'Doctor ID must be a positive number.' });
     const [rows] = await pool.query(
-      `SELECT d.doctor_id AS doctorId, u.name, s.name AS specialization, c.name AS clinic,
+      `SELECT d.doctor_id AS doctorId, u.name, d.approval_status AS approvalStatus, s.name AS specialization, c.name AS clinic,
         d.qualifications, d.experience, d.consultation_fee AS consultationFee, d.bio,
         COALESCE(ROUND(AVG(CASE WHEN r.status = 'approved' THEN r.rating END), 1), 0) AS rating,
         COUNT(CASE WHEN r.status = 'approved' THEN r.review_id END) AS reviewCount

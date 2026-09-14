@@ -43,7 +43,7 @@ export function useNotifications() {
     }
   }, []);
 
-  // Fetch count initially
+  // Fetch the unread badge initially; dashboards explicitly fetch full alerts.
   useEffect(() => {
     getUnreadCount().then(setUnreadCount).catch((err) => setError(err instanceof Error ? err.message : 'Unable to load notification count.'));
   }, []);

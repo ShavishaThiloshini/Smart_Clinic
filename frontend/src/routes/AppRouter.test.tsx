@@ -3,6 +3,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppRouter } from './AppRouter';
 
+function tokenFor(role: string) {
+  return `header.${btoa(JSON.stringify({ role, exp: Math.floor(Date.now() / 1000) + 3600 }))}.signature`;
+}
+
 describe('AppRouter', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -39,7 +43,7 @@ describe('AppRouter', () => {
   });
 
   it('renders patient dashboard for authenticated patients', () => {
-    localStorage.setItem('sc_token', 'demo-token');
+    localStorage.setItem('sc_token', tokenFor('patient'));
     localStorage.setItem('sc_user', JSON.stringify({ name: 'Sample Patient', role: 'patient' }));
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
@@ -56,7 +60,7 @@ describe('AppRouter', () => {
   });
 
   it('renders the medical records page for authenticated patients', async () => {
-    localStorage.setItem('sc_token', 'demo-token');
+    localStorage.setItem('sc_token', tokenFor('patient'));
     localStorage.setItem('sc_user', JSON.stringify({ name: 'Sample Patient', role: 'patient' }));
 
     vi.stubGlobal('fetch', vi.fn((input: unknown) => {

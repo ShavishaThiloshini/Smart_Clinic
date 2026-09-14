@@ -1,4 +1,4 @@
-export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+export type AppointmentStatus = 'pending' | 'accepted' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
 
 export type Appointment = {
 	appointmentId: number;

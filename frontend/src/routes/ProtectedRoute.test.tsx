@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ProtectedRoute } from './ProtectedRoute';
 
 function renderProtectedRoute(token?: string, role?: string) {
-  if (token) localStorage.setItem('sc_token', token);
+  if (token) localStorage.setItem('sc_token', `header.${btoa(JSON.stringify({ role, exp: Math.floor(Date.now() / 1000) + 3600 }))}.signature`);
   if (role) localStorage.setItem('sc_user', JSON.stringify({ role }));
 
   return render(

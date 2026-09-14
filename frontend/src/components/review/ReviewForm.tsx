@@ -51,13 +51,13 @@ export function ReviewForm({ appointmentId, doctorName, date, onSubmit, onCancel
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="comment" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#333' }}>Additional comments (optional)</label>
+            <label htmlFor="comment" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#333' }}>Feedback summary (optional)</label>
             <textarea
               id="comment"
               value={comment}
               onChange={e => setComment(e.target.value)}
               maxLength={2000}
-              placeholder="Tell us about your visit..."
+              placeholder="Summarize your experience with this doctor..."
               rows={4}
               style={{ width: '100%', padding: '0.75rem', borderRadius: '6px', border: '1px solid #ccc', fontFamily: 'inherit', resize: 'vertical' }}
             />

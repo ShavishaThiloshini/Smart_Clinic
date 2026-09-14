@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo.png';
 import { getDoctorProfile, updateDoctorProfile } from '../../services/doctor.service';
+import { DoctorSidebar } from '../../components/doctor/DoctorSidebar';
 
 type DoctorProfile = {
   name: string;
@@ -94,16 +95,7 @@ export function DoctorProfilePage() {
   }
 
   return <main className="doctor-profile-shell">
-    <aside className="doctor-profile-sidebar">
-      <img src={logo} alt="Smart Clinic" />
-      <p className="doctor-profile-role">DOCTOR PORTAL</p>
-      <nav aria-label="Doctor navigation">
-        <button type="button" onClick={() => navigate('/doctor/profile')}>My profile</button>
-        <button type="button" onClick={() => navigate('/doctor/prescriptions')}>Prescriptions</button>
-        <button type="button" onClick={() => navigate('/doctor/availability')}>Availability</button>
-      </nav>
-      <button className="doctor-signout" type="button" onClick={signOut}>Sign out</button>
-    </aside>
+    <DoctorSidebar onSignOut={signOut} />
     <section className="doctor-profile-content">
       <header className="doctor-profile-header"><span>Account settings</span><div className="doctor-avatar">{initials}</div></header>
       <div className="doctor-profile-page">

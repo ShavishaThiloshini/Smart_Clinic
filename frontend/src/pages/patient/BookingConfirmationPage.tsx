@@ -44,7 +44,8 @@ function formatDate(isoDate: string): string {
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     pending: { label: 'Pending', cls: 'status-pending' },
-    confirmed: { label: 'Confirmed', cls: 'status-confirmed' },
+    accepted: { label: 'Accepted', cls: 'status-confirmed' },
+    confirmed: { label: 'Accepted', cls: 'status-confirmed' },
     completed: { label: 'Completed', cls: 'status-completed' },
     cancelled: { label: 'Cancelled', cls: 'status-cancelled' },
     'no-show': { label: 'No-show', cls: 'status-noshow' },
@@ -193,7 +194,7 @@ export function BookingConfirmationPage() {
             {/* Info note */}
             <div className="conf-info-note" role="note">
               <span className="conf-note-icon" aria-hidden="true">ℹ</span>
-              <p>Your appointment is currently <strong>pending</strong>. The doctor or clinic staff will confirm it. Make sure to arrive on time and bring any relevant medical records.</p>
+              <p>Your appointment is currently <strong>{appointment.status.toLowerCase() === 'accepted' || appointment.status.toLowerCase() === 'confirmed' ? 'accepted' : 'pending'}</strong>. The doctor or clinic staff will review and confirm it. Make sure to arrive on time and bring any relevant medical records.</p>
             </div>
 
             {/* Actions */}

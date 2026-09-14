@@ -17,6 +17,7 @@ const navigation = [
 type Doctor = {
   doctorId: number;
   name: string;
+  approvalStatus?: string;
   specialization: string | null;
   clinic: string | null;
   experience: number | null;
@@ -79,7 +80,7 @@ export function DoctorSearchPage() {
         clinic: filters.clinicName.trim()
       });
       
-      setDoctors(data.success ? (data.doctors || []) : []);
+      setDoctors(data.success ? (data.doctors || []).filter((doctor) => doctor.approvalStatus === 'approved') : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load doctors. Please try again.');
     } finally {

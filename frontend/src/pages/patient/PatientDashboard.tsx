@@ -5,6 +5,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { useAppointments } from '../../hooks/useAppointments';
 import { apiRequest } from '../../services/api';
 import type { Appointment } from '../../types/appointment.types';
+import { DashboardAlertPanel } from '../../components/notification/DashboardAlertPanel';
 
 const navigation = [
   { label: 'Dashboard', icon: '⌂', path: '/patient/dashboard' },
@@ -18,7 +19,7 @@ const navigation = [
 
 export function PatientDashboard() {
   const navigate = useNavigate();
-  const { unreadCount } = useNotifications();
+  const { notifications, unreadCount, fetchNotifications, markAsRead } = useNotifications();
   const { history: appointments, loading: appointmentsLoading, fetchAppointmentHistory } = useAppointments();
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -45,11 +46,20 @@ export function PatientDashboard() {
     loadDashboardData();
   }, [fetchAppointmentHistory]);
 
+  useEffect(() => {
+    fetchNotifications();
+    const refresh = window.setInterval(() => {
+      fetchNotifications();
+      fetchAppointmentHistory();
+    }, 10000);
+    return () => window.clearInterval(refresh);
+  }, [fetchNotifications, fetchAppointmentHistory]);
+
   const upcomingAppointment = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     return appointments.find((apt: Appointment) => 
       apt.appointmentDate >= today && 
-      ['pending', 'confirmed'].includes(apt.status.toLowerCase())
+      ['pending', 'accepted', 'confirmed'].includes(apt.status.toLowerCase())
     ) || null;
   }, [appointments]);
 
@@ -149,7 +159,7 @@ export function PatientDashboard() {
               <article className="upcoming-card">
                 <div className="card-heading">
                   <div><p className="section-kicker">NEXT APPOINTMENT</p><h2>Upcoming visit</h2></div>
-                  <span className={`status-${upcomingAppointment.status.toLowerCase()}`}>{upcomingAppointment.status}</span>
+                  <span className={`status-${upcomingAppointment.status.toLowerCase() === 'accepted' ? 'confirmed' : upcomingAppointment.status.toLowerCase()}`}>{upcomingAppointment.status.toLowerCase() === 'accepted' ? 'Accepted' : upcomingAppointment.status}</span>
                 </div>
                 <div className="appointment-summary">
                   <div className="doctor-initials">
@@ -193,6 +203,12 @@ export function PatientDashboard() {
             </article>
           </section>
 
+          <DashboardAlertPanel
+            notifications={notifications}
+            onMarkAsRead={markAsRead}
+            onViewAll={() => navigate('/patient/notifications')}
+          />
+
           <section className="quick-access"><div className="section-title"><div><p className="section-kicker">QUICK ACCESS</p><h2>Manage your care</h2></div></div><div className="quick-grid">
             <button type="button" className="quick-card" onClick={() => navigate('/patient/appointments')}><span className="quick-icon blue">▣</span><strong>My appointments</strong><small>View upcoming and past visits</small><i>→</i></button>
             <button type="button" className="quick-card" onClick={() => navigate('/patient/medical-records')}><span className="quick-icon teal">▤</span><strong>Medical records</strong><small>Review your consultation history</small><i>→</i></button>
@@ -204,7 +220,7 @@ export function PatientDashboard() {
               <div className="activity-item">
                 <span className="activity-dot blue" />
                 <div>
-                  <strong>Your appointment is {upcomingAppointment.status.toLowerCase()}</strong>
+                  <strong>Your appointment is {upcomingAppointment.status.toLowerCase() === 'accepted' ? 'accepted' : upcomingAppointment.status.toLowerCase()}</strong>
                   <p>Dr. {upcomingAppointment.doctorName} · {new Date(upcomingAppointment.appointmentDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at {upcomingAppointment.startTime}</p>
                 </div>
                 <time>Today</time>

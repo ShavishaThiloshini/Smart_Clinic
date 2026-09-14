@@ -40,14 +40,16 @@ function statusClass(status: string): string {
 }
 
 function queueStatusMessage(status: string): string {
+  const normalized = status.toLowerCase();
   const messages: Record<string, string> = {
     pending: 'Your booking is waiting for clinic confirmation.',
+    accepted: 'Your appointment has been accepted by the doctor. Please prepare for your visit.',
     confirmed: 'Your visit is confirmed. Please arrive before your scheduled time.',
     completed: 'This visit has been completed.',
     cancelled: 'This appointment has been cancelled.',
     'no-show': 'This appointment was marked as no-show.',
   };
-  return messages[status.toLowerCase()] || 'Appointment status updated.';
+  return messages[normalized] || 'Appointment status updated.';
 }
 
 function toMinutes(time: string): number { const [hours, minutes] = time.split(':').map(Number); return hours * 60 + minutes; }
@@ -112,9 +114,10 @@ export function AppointmentHistoryPage() {
 
   const today = new Date().toISOString().slice(0, 10);
   const filteredAppointments = appointments.filter((appointment) => {
-    const isUpcoming = appointment.appointmentDate >= today && appointment.status.toLowerCase() !== 'cancelled';
+    const normalizedStatus = appointment.status.toLowerCase();
+    const isUpcoming = appointment.appointmentDate >= today && normalizedStatus !== 'cancelled';
     const matchesView = filter === 'all' || (filter === 'upcoming' ? isUpcoming : !isUpcoming);
-    const matchesStatus = statusFilter === 'all' || appointment.status.toLowerCase() === statusFilter;
+    const matchesStatus = statusFilter === 'all' || normalizedStatus === statusFilter || (statusFilter === 'confirmed' && normalizedStatus === 'accepted');
     return matchesView && matchesStatus;
   });
 
@@ -222,7 +225,7 @@ export function AppointmentHistoryPage() {
                     <article className="queue-status-item" key={appointment.appointmentId}>
                       <div className="queue-number"><span>QUEUE</span><strong>{appointment.queueNumber ? `#${appointment.queueNumber}` : '—'}</strong></div>
                       <div className="queue-status-main"><h3>Dr. {appointment.doctorName}</h3><p>{date.full} · {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}</p><span>{queueStatusMessage(appointment.status)}</span></div>
-                      <span className={statusClass(appointment.status)}>{appointment.status}</span>
+                      <span className={statusClass(appointment.status === 'accepted' ? 'confirmed' : appointment.status)}>{appointment.status === 'accepted' ? 'Accepted' : appointment.status}</span>
                     </article>
                   );
                 })}
@@ -271,10 +274,10 @@ export function AppointmentHistoryPage() {
                       <div className="history-date"><strong>{date.day}</strong><span>{date.month}</span></div>
                       <div className="history-doctor-avatar">{initials}</div>
                       <div className="history-appointment-main">
-                        <div className="history-appointment-heading"><div><h2>Dr. {appointment.doctorName}</h2><p>{appointment.clinicName || 'Smart Clinic'}</p></div><span className={statusClass(appointment.status)}>{appointment.status}</span></div>
+                        <div className="history-appointment-heading"><div><h2>Dr. {appointment.doctorName}</h2><p>{appointment.clinicName || 'Smart Clinic'}</p></div><span className={statusClass(appointment.status === 'accepted' ? 'confirmed' : appointment.status)}>{appointment.status === 'accepted' ? 'Accepted' : appointment.status}</span></div>
                         <div className="history-meta"><span>📅 {date.full}</span><span>⏰ {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}</span><span>Queue #{appointment.queueNumber}</span></div>
                         {appointment.reason && <p className="history-reason">Reason: {appointment.reason}</p>}
-                        {(appointment.status.toLowerCase() === 'pending' || appointment.status.toLowerCase() === 'confirmed') && appointment.appointmentDate >= today && (
+                        {(appointment.status.toLowerCase() === 'pending' || appointment.status.toLowerCase() === 'accepted' || appointment.status.toLowerCase() === 'confirmed') && appointment.appointmentDate >= today && (
                           <div className="history-actions">
                             <button type="button" className="history-action secondary" onClick={() => openReschedule(appointment)}>Reschedule</button>
                             <button type="button" className="history-action danger" onClick={() => { setActionError(''); setActionSuccess(''); setAction({ type: 'cancel', appointment }); }}>Cancel appointment</button>

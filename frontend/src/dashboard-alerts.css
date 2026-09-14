@@ -1,0 +1,55 @@
+.dashboard-alert-panel {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid #dce7f3;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px #2c44700a;
+}
+
+.dashboard-alert-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-alert-heading h2 {
+  margin: 6px 0 0;
+  color: #1c2d4b;
+  font-size: 1.1rem;
+}
+
+.dashboard-alert-heading button {
+  border: 0;
+  background: transparent;
+  color: #315be7;
+  font: 700 0.8rem inherit;
+  cursor: pointer;
+}
+
+.dashboard-alert-list {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-alert-list .notification-item {
+  margin: 0;
+}
+
+.dashboard-alert-empty {
+  margin: 0;
+  color: #71809a;
+  font-size: 0.86rem;
+}
+
+@media (max-width: 600px) {
+  .dashboard-alert-panel {
+    padding: 17px;
+  }
+
+  .dashboard-alert-heading {
+    align-items: flex-start;
+  }
+}
