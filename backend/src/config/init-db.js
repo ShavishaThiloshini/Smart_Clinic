@@ -9,6 +9,12 @@ async function initializeDatabase() {
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
+    ...(process.env.DB_SSL === 'true' && {
+      ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
+      }
+    }),
     multipleStatements: true
   };
   const database = process.env.DB_NAME || 'smart_clinic';
