@@ -49,7 +49,9 @@ const sanitizeInput = (req, res, next) => {
     
     const sanitized = {};
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      // Express 5 query objects can have a null prototype, so calling the
+      // method directly would throw for normal requests with query strings.
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         if (typeof obj[key] === 'string') {
           sanitized[key] = sanitizeString(obj[key]);
         } else if (Array.isArray(obj[key])) {
@@ -171,7 +173,8 @@ const preventSqlInjection = (req, res, next) => {
     if (!obj || typeof obj !== 'object') return false;
     
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      // req.query may be a null-prototype object in Express 5.
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         if (typeof obj[key] === 'string') {
           if (checkForSqlInjection(obj[key])) {
             return true;
@@ -224,7 +227,8 @@ const preventXSS = (req, res, next) => {
     if (!obj || typeof obj !== 'object') return false;
     
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      // req.query may be a null-prototype object in Express 5.
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         if (typeof obj[key] === 'string') {
           if (checkForXSS(obj[key])) {
             return true;

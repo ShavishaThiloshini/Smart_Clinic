@@ -36,13 +36,20 @@ app.use(preventXSS);
 const limiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
+  // Authentication endpoints have their own, stricter limiter below. Do not
+  // count them twice in the general API bucket.
+  skip: (req) => req.path === '/api/health' || req.path === '/' || req.path.startsWith('/api/auth/'),
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.'
   }
 });
 
-app.use(limiter);
+// Keep local development usable while React hot reloads and dashboards make
+// several requests at once. Production keeps the general API protection.
+if (process.env.NODE_ENV === 'production') {
+  app.use(limiter);
+}
 
 // CORS configuration
 const allowedOrigins = process.env.CORS_ORIGIN
